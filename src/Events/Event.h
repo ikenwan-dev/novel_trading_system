@@ -10,7 +10,7 @@ class Event {
 public:
   virtual ~Event() = default;
 
-  // Pure virtual function to get the event type. MUST BE IMPLEMENTED BY
-  // SUBCLASSES
+  // Pure virtual function to get the event type.
+  // MUST BE IMPLEMENTED BY SUBCLASSES
   virtual EventType get_type() const = 0;
 };
