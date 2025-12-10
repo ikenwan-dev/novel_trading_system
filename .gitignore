@@ -1,0 +1,22 @@
+# CMake build directories
+/build/
+/cmake-build-*/
+
+# Common compiled stuff
+main
+*.o
+*.obj
+*.pdb
+*.exe
+*.out
+*.log
+
+/.cache
+
+# VS Code
+.vscode/
+
+# macOS debug symbols
+*.dSYM/
+*.dSYM/Contents/
+

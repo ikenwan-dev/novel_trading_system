@@ -1,0 +1,24 @@
+#pragma once
+#include "../Event.h"
+#include <chrono>
+#include <string>
+
+class MarketEvent : public Event {
+public:
+  MarketEvent(std::string ticker,
+              std::chrono::system_clock::time_point timestamp, double open,
+              double close, double high, double low, int volume)
+      : ticker_(std::move(ticker)), timestamp_(timestamp), open_(open),
+        close_(close), high_(high), low_(low), volume_(volume) {}
+
+  EventType get_type() const override { return EventType::Market; }
+
+private:
+  const std::string ticker_;
+  const std::chrono::system_clock::time_point timestamp_;
+  const double open_;
+  const double close_;
+  const double high_;
+  const double low_;
+  const int volume_;
+};
