@@ -4,6 +4,8 @@
 #include <mutex>
 #include <queue>
 
+// TODO: Test if lockless queue is faster
+// ThreadSafeQueue is a thread-safe implementation of a queue
 template <typename T> class ThreadSafeQueue {
 public:
   // Pushes a value T onto the queue
