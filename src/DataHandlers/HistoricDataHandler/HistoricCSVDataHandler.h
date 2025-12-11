@@ -2,10 +2,9 @@
 #include "../../Events/Event.h"
 #include "../../ThreadSafeQueue/ThreadSafeQueue.h"
 #include "../DataHandler.h"
+#include "../DataTypes/DataTypes.h"
 #include <map>
 #include <vector>
-
-struct Bar; // Forward declaration. TODO: Make sure to implement bar
 
 class HistoricCSVDataHandler : public DataHandler {
 public:
@@ -16,7 +15,7 @@ public:
   bool is_running() const override;
 
 private:
-  void load_all_data();
+  void load_all_data(const std::map<std::string, std::string> &csv_files);
 
   ThreadSafeQueue<std::shared_ptr<Event>> &event_queue_;
 

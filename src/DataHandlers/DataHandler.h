@@ -1,7 +1,5 @@
 #pragma once
 
-#include "../Events/Event.h"
-
 class DataHandler {
 public:
   virtual ~DataHandler() = default;
