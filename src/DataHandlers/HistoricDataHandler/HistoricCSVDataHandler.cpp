@@ -1,6 +1,8 @@
 #include "HistoricCSVDataHandler.h"
 #include "../../../third_party/fast_cpp_csv_parser/csv.h"
+#include "../../Events/MarketEvent/MarketEvent.h"
 #include <chrono>
+#include <iostream>
 #include <stdexcept>
 #include <string>
 
@@ -45,8 +47,9 @@ std::vector<Bar> load_stooq_file(const std::string &filename) {
   // Ticker,Per,Date,Time,Open,High,Low,Close,Vol,Openint
   io::CSVReader<10, io::trim_chars<' '>, io::no_quote_escape<','>> in(filename);
 
-  in.read_header(io::ignore_extra_column, "TICKER", "PER", "DATE", "TIME",
-                 "OPEN", "HIGH", "LOW", "CLOSE", "VOL", "OPENINT");
+  in.read_header(io::ignore_extra_column, "<TICKER>", "<PER>", "<DATE>",
+                 "<TIME>", "<OPEN>", "<HIGH>", "<LOW>", "<CLOSE>", "<VOL>",
+                 "<OPENINT>");
 
   std::string ticker;
   std::string perStr;
@@ -60,6 +63,7 @@ std::vector<Bar> load_stooq_file(const std::string &filename) {
                      vol, openInt)) {
 
     if (perStr.empty()) {
+      std::cout << "Skipping row with empty PER\n";
       continue; // malformed row
     }
 
@@ -96,4 +100,51 @@ void HistoricCSVDataHandler::load_all_data(
   }
 }
 
-void HistoricCSVDataHandler::update() {}
+void HistoricCSVDataHandler::update() {
+  std::string next_ticker = "";
+  auto earliest_time = std::chrono::system_clock::time_point::max();
+  for (const auto &[ticker, index] : current_index_) {
+    if (index < all_data_[ticker].size()) {
+      if (all_data_[ticker][index].timestamp < earliest_time) {
+        earliest_time = all_data_[ticker][index].timestamp;
+        next_ticker = ticker;
+      }
+    }
+  }
+  if (!next_ticker.empty()) {
+    const auto &bar = all_data_[next_ticker][current_index_[next_ticker]];
+    auto market_event =
+        std::make_shared<MarketEvent>(next_ticker, bar.timestamp, bar.open,
+                                      bar.close, bar.high, bar.low, bar.volume);
+    event_queue_.push(market_event);
+    current_index_[next_ticker]++;
+  } else {
+    is_running_ = false;
+  }
+}
+
+bool HistoricCSVDataHandler::is_running() const { return is_running_; }
+
+int main() {
+  try {
+    auto bars = load_stooq_file("../src/test_data/aapl.us.txt");
+
+    std::cout << "Loaded " << bars.size() << " bars\n";
+    if (!bars.empty()) {
+      const auto &b = bars.front();
+      std::time_t tt = std::chrono::system_clock::to_time_t(b.timestamp);
+      std::cout << b.symbol << " first bar:\n";
+      std::cout << "  time:  " << std::ctime(&tt); // ctime() adds newline
+      std::cout << "  open:  " << b.open << "\n";
+      std::cout << "  high:  " << b.high << "\n";
+      std::cout << "  low:   " << b.low << "\n";
+      std::cout << "  close: " << b.close << "\n";
+      std::cout << "  vol:   " << b.volume << "\n";
+    }
+  } catch (const std::exception &ex) {
+    std::cerr << "Error: " << ex.what() << "\n";
+    return 1;
+  }
+
+  return 0;
+}

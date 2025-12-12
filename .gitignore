@@ -20,3 +20,5 @@ main
 *.dSYM/
 *.dSYM/Contents/
 
+
+.DS_Store

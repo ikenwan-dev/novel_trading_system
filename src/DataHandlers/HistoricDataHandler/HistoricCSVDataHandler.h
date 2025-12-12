@@ -14,7 +14,7 @@ public:
   void update() override;
   bool is_running() const override;
 
-private:
+  // private:
   void load_all_data(const std::map<std::string, std::string> &csv_files);
 
   ThreadSafeQueue<std::shared_ptr<Event>> &event_queue_;
