@@ -1,0 +1,3 @@
+TODO: implement tick data handler
+This will be used for processing tick data and producing market events
+this could either transform tick data into bars or not depending on the strategy
