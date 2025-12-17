@@ -11,6 +11,8 @@ public:
   MovingAverageCrossover(ThreadSafeQueue<std::shared_ptr<Event>> &event_queue,
                          const std::vector<std::string> &tickers,
                          int short_window, int long_window);
+
+  // TODO: make sure this properly receives market events in order
   void on_market_data(const MarketEvent &event) override;
 
 private:

@@ -13,7 +13,6 @@ public:
 
   EventType get_type() const override { return EventType::Market; }
 
-private:
   const std::string ticker_;
   const std::chrono::system_clock::time_point timestamp_;
   const double open_;
