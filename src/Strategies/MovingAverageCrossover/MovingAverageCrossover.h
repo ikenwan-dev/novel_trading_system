@@ -12,7 +12,8 @@ public:
                          const std::vector<std::string> &tickers,
                          int short_window, int long_window);
 
-  // TODO: make sure this properly receives market events in order
+  // TODO: make sure this needs to receives market events in order... might need
+  // sequencer component to buffer market data
   void on_market_data(const MarketEvent &event) override;
 
 private:
