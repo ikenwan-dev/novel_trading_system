@@ -1,6 +1,6 @@
 #pragma once
-#include "../../ThreadSafeQueue/ThreadSafeQueue.h"
-#include "../Strategy.h"
+#include "Strategies/Strategy.h"
+#include "ThreadSafeQueue/ThreadSafeQueue.h"
 #include <deque>
 #include <map>
 #include <string>

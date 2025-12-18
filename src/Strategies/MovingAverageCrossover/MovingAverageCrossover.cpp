@@ -1,5 +1,5 @@
 #include "MovingAverageCrossover.h"
-#include "../../Events/SignalEvent/SignalEvent.h"
+#include "Events/SignalEvent/SignalEvent.h"
 #include <numeric>
 MovingAverageCrossover::MovingAverageCrossover(
     ThreadSafeQueue<std::shared_ptr<Event>> &event_queue,

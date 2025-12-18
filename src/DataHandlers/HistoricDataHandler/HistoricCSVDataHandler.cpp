@@ -1,13 +1,14 @@
 #include "HistoricCSVDataHandler.h"
-#include "../../../third_party/fast_cpp_csv_parser/csv.h"
-#include "../../Events/MarketEvent/MarketEvent.h"
+#include "Events/MarketEvent/MarketEvent.h"
+#include "csv.h"
 #include <chrono>
 #include <iostream>
 #include <stdexcept>
 #include <string>
 
 std::chrono::system_clock::time_point
-parse_stooq_datetime(const std::string &dateStr, const std::string &timeStr) {
+HistoricCSVDataHandler::parse_stooq_datetime(const std::string &dateStr,
+                                             const std::string &timeStr) {
   using namespace std::chrono;
 
   if (dateStr.size() != 8 || timeStr.size() != 6) {
@@ -39,7 +40,8 @@ parse_stooq_datetime(const std::string &dateStr, const std::string &timeStr) {
   return system_clock::time_point{tp};
 }
 
-std::vector<Bar> load_stooq_file(const std::string &filename) {
+std::vector<Bar>
+HistoricCSVDataHandler::load_stooq_file(const std::string &filename) {
   std::vector<Bar> bars;
 
   // The file extension (.txt vs .csv) does not matter — it's just text.
@@ -69,7 +71,8 @@ std::vector<Bar> load_stooq_file(const std::string &filename) {
 
     Bar bar;
     bar.symbol = ticker;
-    bar.timestamp = parse_stooq_datetime(dateStr, timeStr);
+    bar.timestamp =
+        HistoricCSVDataHandler::parse_stooq_datetime(dateStr, timeStr);
     bar.open = open;
     bar.high = high;
     bar.low = low;
@@ -124,27 +127,3 @@ void HistoricCSVDataHandler::update() {
 }
 
 bool HistoricCSVDataHandler::is_running() const { return is_running_; }
-
-int main() {
-  try {
-    auto bars = load_stooq_file("../src/test_data/aapl.us.txt");
-
-    std::cout << "Loaded " << bars.size() << " bars\n";
-    if (!bars.empty()) {
-      const auto &b = bars.front();
-      std::time_t tt = std::chrono::system_clock::to_time_t(b.timestamp);
-      std::cout << b.symbol << " first bar:\n";
-      std::cout << "  time:  " << std::ctime(&tt); // ctime() adds newline
-      std::cout << "  open:  " << b.open << "\n";
-      std::cout << "  high:  " << b.high << "\n";
-      std::cout << "  low:   " << b.low << "\n";
-      std::cout << "  close: " << b.close << "\n";
-      std::cout << "  vol:   " << b.volume << "\n";
-    }
-  } catch (const std::exception &ex) {
-    std::cerr << "Error: " << ex.what() << "\n";
-    return 1;
-  }
-
-  return 0;
-}

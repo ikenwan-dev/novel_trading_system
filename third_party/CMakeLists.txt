@@ -1,0 +1,2 @@
+add_library(fast_cpp_csv_parser INTERFACE)
+target_include_directories(fast_cpp_csv_parser INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/fast_cpp_csv_parser)

@@ -1,8 +1,8 @@
 #pragma once
-#include "../../Events/Event.h"
-#include "../../ThreadSafeQueue/ThreadSafeQueue.h"
-#include "../DataHandler.h"
-#include "../DataTypes/DataTypes.h"
+#include "DataHandlers/DataHandler.h"
+#include "DataHandlers/DataTypes/DataTypes.h"
+#include "Events/Event.h"
+#include "ThreadSafeQueue/ThreadSafeQueue.h"
 #include <map>
 #include <vector>
 
@@ -14,8 +14,8 @@ public:
   void update() override;
   bool is_running() const override;
 
-  // private:
   void load_all_data(const std::map<std::string, std::string> &csv_files);
+  static std::vector<Bar> load_stooq_file(const std::string &filename);
 
   ThreadSafeQueue<std::shared_ptr<Event>> &event_queue_;
 
@@ -26,4 +26,8 @@ public:
   std::map<std::string, size_t> current_index_;
 
   bool is_running_ = true;
+
+private:
+  static std::chrono::system_clock::time_point
+  parse_stooq_datetime(const std::string &dateStr, const std::string &timeStr);
 };

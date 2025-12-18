@@ -3,7 +3,15 @@ project(NovelTradingSystem)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# include_directories(third_party/fast_cpp_csv_parser)
+add_subdirectory(third_party)
+add_subdirectory(src)
 
-# TODO add main.cpp once configured
-# add_executable(NovelTradingSystem src/DataHandlers/HistoricDataHandler/HistoricCSVDataHandler.cpp)
+
+add_executable(MainEventLoop src/main.cpp)
+
+target_link_libraries(MainEventLoop PRIVATE 
+    DataHandlers 
+    Strategies 
+    Events 
+    ThreadSafeQueue
+)

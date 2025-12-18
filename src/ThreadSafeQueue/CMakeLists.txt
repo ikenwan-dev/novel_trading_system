@@ -1,0 +1,2 @@
+add_library(ThreadSafeQueue INTERFACE)
+target_include_directories(ThreadSafeQueue INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})

@@ -1,0 +1,4 @@
+add_subdirectory(ThreadSafeQueue)
+add_subdirectory(Events)
+add_subdirectory(DataHandlers)
+add_subdirectory(Strategies)
