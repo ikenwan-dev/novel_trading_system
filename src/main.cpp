@@ -1,10 +1,17 @@
 #include "DataHandlers/HistoricDataHandler/HistoricCSVDataHandler.h"
+#include "ThreadSafeQueue/ThreadSafeQueue.h"
 #include <iostream>
+#include <map>
 
 int main() {
   try {
-    auto bars =
-        HistoricCSVDataHandler::load_stooq_file("../src/test_data/aapl.us.txt");
+    ThreadSafeQueue<std::shared_ptr<Event>> event_queue{};
+    std::map<std::string, std::string> files{
+        {"AAPL", "../src/test_data/aapl.us.txt"},
+    };
+    auto historic_csv_data_handler =
+        std::make_shared<HistoricCSVDataHandler>(event_queue, files);
+    auto bars = historic_csv_data_handler->all_data_.at("AAPL");
 
     std::cout << "Loaded " << bars.size() << " bars\n";
     if (!bars.empty()) {
