@@ -1,5 +1,6 @@
 #include "DataHandlers/HistoricDataHandler/HistoricCSVDataHandler.h"
 #include "ThreadSafeQueue/ThreadSafeQueue.h"
+#include "Strategies/StrategyConfig.h"
 #include <iostream>
 #include <map>
 

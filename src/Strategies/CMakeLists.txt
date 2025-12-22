@@ -1,5 +1,6 @@
 add_library(Strategies
     MovingAverageCrossover/MovingAverageCrossover.cpp
+    StrategyConfig.h
 )
 
 target_link_libraries(Strategies PRIVATE Events)
