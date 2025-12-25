@@ -1,8 +1,11 @@
 #include "DataHandlers/HistoricDataHandler/HistoricCSVDataHandler.h"
 #include "ThreadSafeQueue/ThreadSafeQueue.h"
 #include "Strategies/StrategyConfig.h"
+#include "Strategies/Strategy.h" 
+#include "Strategies/MovingAverageCrossover/MovingAverageCrossover.h"
 #include <glaze/json/read.hpp>
 #include <iostream>
+#include <memory>
 
 
 StrategyConfig load_config_from_file(const std::string& filepath){
@@ -16,6 +19,16 @@ StrategyConfig load_config_from_file(const std::string& filepath){
   std::cout << "Loaded strategy with name: " << sc.name << std::endl;
   return sc;
 }
+
+std::shared_ptr<Strategy> load_strategy_from_config(const StrategyConfig& sc, ThreadSafeQueue<std::shared_ptr<Event>>& event_queue){
+  if (sc.name == "MovingAverageCrossover") {
+    std::cout << "Loaded MovingAverageCrossover strategy" << std::endl;
+    return std::make_shared<MovingAverageCrossover>(event_queue, sc.tickers,sc.params.at("short_window"), sc.params.at("long_window"));
+  } else {
+    throw std::runtime_error("Unknown strategy name: " + sc.name);
+  }
+}
+  
 
 int main() {
   try {
@@ -31,6 +44,7 @@ int main() {
     std::cout << "Loaded " << bars.size() << " bars\n";
 
     StrategyConfig sc = load_config_from_file("../src/Configs/mac_config.json");
+    std::shared_ptr<Strategy> strategy = load_strategy_from_config(sc, event_queue);
   } catch (const std::exception &ex) {
     std::cerr << "Error: " << ex.what() << "\n";
     return 1;
