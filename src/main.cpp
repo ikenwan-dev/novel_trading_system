@@ -1,9 +1,8 @@
 #include "DataHandlers/HistoricDataHandler/HistoricCSVDataHandler.h"
 #include "ThreadSafeQueue/ThreadSafeQueue.h"
 #include "Strategies/StrategyConfig.h"
+#include <glaze/json/read.hpp>
 #include <iostream>
-#include <stdexcept>
-#include "glaze/glaze.hpp"
 
 
 StrategyConfig load_config_from_file(const std::string& filepath){

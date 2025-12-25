@@ -23,3 +23,5 @@ main
 
 .DS_Store
 .idx
+
+.clangd
