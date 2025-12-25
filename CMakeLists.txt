@@ -14,4 +14,5 @@ target_link_libraries(MainEventLoop PRIVATE
     Strategies 
     Events 
     ThreadSafeQueue
+    glaze::glaze
 )

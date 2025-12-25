@@ -2,30 +2,36 @@
 #include "ThreadSafeQueue/ThreadSafeQueue.h"
 #include "Strategies/StrategyConfig.h"
 #include <iostream>
-#include <map>
+#include <stdexcept>
+#include "glaze/glaze.hpp"
+
+
+StrategyConfig load_config_from_file(const std::string& filepath){
+  StrategyConfig sc;
+  auto ec = glz::read_file_json(sc, "../src/Configs/mac_config.json", std::string{});
+
+  if (ec) {
+    // Glaze returns an error object that contains the error code and location
+    throw std::runtime_error("Error parsing JSON: " + glz::format_error(ec));
+  }
+  std::cout << "Loaded strategy with name: " << sc.name << std::endl;
+  return sc;
+}
 
 int main() {
   try {
+
     ThreadSafeQueue<std::shared_ptr<Event>> event_queue{};
+    
     std::map<std::string, std::string> files{
         {"AAPL", "../src/test_data/aapl.us.txt"},
     };
     auto historic_csv_data_handler =
         std::make_shared<HistoricCSVDataHandler>(event_queue, files);
     auto bars = historic_csv_data_handler->all_data_.at("AAPL");
-
     std::cout << "Loaded " << bars.size() << " bars\n";
-    if (!bars.empty()) {
-      const auto &b = bars.front();
-      std::time_t tt = std::chrono::system_clock::to_time_t(b.timestamp);
-      std::cout << b.symbol << " first bar:\n";
-      std::cout << "  time:  " << std::ctime(&tt); // ctime() adds newline
-      std::cout << "  open:  " << b.open << "\n";
-      std::cout << "  high:  " << b.high << "\n";
-      std::cout << "  low:   " << b.low << "\n";
-      std::cout << "  close: " << b.close << "\n";
-      std::cout << "  vol:   " << b.volume << "\n";
-    }
+
+    StrategyConfig sc = load_config_from_file("../src/Configs/mac_config.json");
   } catch (const std::exception &ex) {
     std::cerr << "Error: " << ex.what() << "\n";
     return 1;
