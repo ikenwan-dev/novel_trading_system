@@ -1074,7 +1074,7 @@ public:
   CSVReader &operator=(const CSVReader &);
 
   template <class... Args>
-  explicit CSVReader(Args &&... args) : in(std::forward<Args>(args)...) {
+  explicit CSVReader(Args &&...args) : in(std::forward<Args>(args)...) {
     std::fill(row, row + column_count, nullptr);
     col_order.resize(column_count);
     for (unsigned i = 0; i < column_count; ++i)
@@ -1147,7 +1147,7 @@ private:
   void parse_helper(std::size_t) {}
 
   template <class T, class... ColType>
-  void parse_helper(std::size_t r, T &t, ColType &... cols) {
+  void parse_helper(std::size_t r, T &t, ColType &...cols) {
     if (row[r]) {
       try {
         try {
@@ -1165,7 +1165,7 @@ private:
   }
 
 public:
-  template <class... ColType> bool read_row(ColType &... cols) {
+  template <class... ColType> bool read_row(ColType &...cols) {
     static_assert(sizeof...(ColType) >= column_count,
                   "not enough columns specified");
     static_assert(sizeof...(ColType) <= column_count,

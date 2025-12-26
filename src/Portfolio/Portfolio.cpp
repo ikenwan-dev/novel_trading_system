@@ -1,24 +1,28 @@
+#include "Portfolio.h"
 #include "Events/FillEvent/FillEvent.h"
 #include "Events/MarketEvent/MarketEvent.h"
 #include "Events/OrderEvent/OrderEvent.h"
-#include "Portfolio.h"
 
-void Portfolio::on_fill(const FillEvent& event){
-    double fill_cost = event.quantity_ * event.fill_price_ + event.commision_;
-    if (event.direction_ == OrderDirection::BUY){
-        cash_ -= fill_cost;
-        holdings_[event.ticker_] += event.quantity_;
-        positions_[event.ticker_].cost_basis += fill_cost;
-    } else {
-        cash_ += fill_cost;
-        holdings_[event.ticker_] -= event.quantity_;
-        positions_[event.ticker_].cost_basis -= fill_cost;
-    }
+Portfolio::Portfolio(DataHandler &data_handler, double initial_capital)
+    : data_handler_(data_handler), initial_capital_(initial_capital),
+      cash_(initial_capital) {}
+
+void Portfolio::on_fill(const FillEvent &event) {
+  double fill_cost = event.quantity_ * event.fill_price_ + event.commision_;
+  if (event.direction_ == OrderDirection::BUY) {
+    cash_ -= fill_cost;
+    holdings_[event.ticker_] += event.quantity_;
+    positions_[event.ticker_].cost_basis += fill_cost;
+  } else {
+    cash_ += fill_cost;
+    holdings_[event.ticker_] -= event.quantity_;
+    positions_[event.ticker_].cost_basis -= fill_cost;
+  }
 }
 
-void Portfolio::on_market_data(const MarketEvent& event){
-    auto it = positions_.find(event.ticker_);
-    if (it != positions_.end()){
-        it->second.market_value = event.close_ * holdings_[event.ticker_];
-    }
+void Portfolio::on_market_data(const MarketEvent &event) {
+  auto it = positions_.find(event.ticker_);
+  if (it != positions_.end()) {
+    it->second.market_value = event.close_ * holdings_[event.ticker_];
+  }
 }
