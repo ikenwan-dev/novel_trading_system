@@ -3,10 +3,6 @@
 #include "Events/MarketEvent/MarketEvent.h"
 #include "Events/OrderEvent/OrderEvent.h"
 
-Portfolio::Portfolio(DataHandler &data_handler, double initial_capital)
-    : data_handler_(data_handler), initial_capital_(initial_capital),
-      cash_(initial_capital) {}
-
 void Portfolio::on_fill(const FillEvent &event) {
   double fill_cost = event.quantity_ * event.fill_price_ + event.commision_;
   if (event.direction_ == OrderDirection::BUY) {
@@ -25,4 +21,21 @@ void Portfolio::on_market_data(const MarketEvent &event) {
   if (it != positions_.end()) {
     it->second.market_value = event.close_ * holdings_[event.ticker_];
   }
+}
+
+double Portfolio::get_total_value() const {
+  double total_market_value = 0;
+  for (const auto &[ticker, position] : positions_) {
+    total_market_value += position.market_value;
+  }
+  return total_market_value;
+}
+
+double Portfolio::get_unrealized_pnl() const {
+  double unrealized_pnl = 0;
+
+  for (const auto &[ticker, position] : positions_) {
+    unrealized_pnl += position.market_value - position.cost_basis;
+  }
+  return unrealized_pnl;
 }

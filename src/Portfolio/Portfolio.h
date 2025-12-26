@@ -8,7 +8,9 @@
 
 class Portfolio {
 public:
-  Portfolio(DataHandler &data_handler, double initial_capital);
+  Portfolio(DataHandler &data_handler, double initial_capital)
+      : data_handler_(data_handler), initial_capital_(initial_capital),
+        cash_(initial_capital) {}
 
   // For updating portfolio holdngs, cash, etc
   void on_fill(const FillEvent &event);
@@ -17,6 +19,9 @@ public:
   void on_market_data(const MarketEvent &event);
 
   double get_total_value() const;
+
+  double get_unrealized_pnl() const;
+
 
   double get_cash() const { return cash_; }
 
