@@ -128,11 +128,17 @@ void HistoricCSVDataHandler::update() {
 
 bool HistoricCSVDataHandler::is_running() const { return is_running_; }
 
-Bar HistoricCSVDataHandler::get_latest_price_info(
-    const std::string &ticker) const {
+std::optional<Bar>
+HistoricCSVDataHandler::get_latest_price_info(const std::string &ticker) const {
   auto it = current_index_.find(ticker);
   if (it == current_index_.end()) {
-    return Bar();
+    std::cout << "No price info found for " << ticker << std::endl;
+    return std::nullopt;
+  }
+  if (it->second >= all_data_.at(ticker).size()) {
+    std::cout << "No more historical data for " << ticker
+              << "Defaulting to last known price." << std::endl;
+    return all_data_.at(ticker)[it->second - 1];
   }
   return all_data_.at(ticker)[it->second];
 }

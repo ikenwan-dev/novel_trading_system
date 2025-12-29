@@ -1,10 +1,19 @@
 #include "SimulatedExecutionHandler.h"
 #include "Events/FillEvent/FillEvent.h"
+#include <iostream>
 #include <memory>
 
 void SimulatedExecutionHandler::on_order(const OrderEvent &order_event) {
-  double simulated_fill_price =
-      data_handler_.get_latest_price_info(order_event.ticker_).open;
+  auto price_info = data_handler_.get_latest_price_info(order_event.ticker_);
+
+  double simulated_fill_price;
+  if (price_info.has_value()) {
+    simulated_fill_price = price_info.value().open;
+  } else {
+    std::cout << "WARNING: No price info for " << order_event.ticker_
+              << ". Halting trade." << std::endl;
+    return;
+  }
 
   auto temp_fill_event = FillEvent(
       order_event.ticker_, order_event.timestamp_, order_event.direction_,
