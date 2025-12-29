@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 
 class DataHandler {
 public:
@@ -10,4 +11,7 @@ public:
 
   // A way to check if the DataHandler is still running
   virtual bool is_running() const = 0;
+
+  // A way to get the latest price for a ticker
+  virtual double get_latest_price(const std::string &ticker) const = 0;
 };

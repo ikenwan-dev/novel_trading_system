@@ -13,6 +13,7 @@ public:
 
   void update() override;
   bool is_running() const override;
+  double get_latest_price(const std::string &ticker) const override;
 
   void load_all_data(const std::map<std::string, std::string> &csv_files);
   static std::vector<Bar> load_stooq_file(const std::string &filename);

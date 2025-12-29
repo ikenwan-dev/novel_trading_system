@@ -127,3 +127,12 @@ void HistoricCSVDataHandler::update() {
 }
 
 bool HistoricCSVDataHandler::is_running() const { return is_running_; }
+
+double
+HistoricCSVDataHandler::get_latest_price(const std::string &ticker) const {
+  auto it = current_index_.find(ticker);
+  if (it == current_index_.end()) {
+    return 0;
+  }
+  return all_data_.at(ticker)[it->second].close;
+}

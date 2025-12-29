@@ -16,7 +16,6 @@ public:
 
   EventType get_type() const override { return EventType::Signal; }
 
-private:
   const std::string ticker_;
   const std::chrono::system_clock::time_point timestamp_;
   const SignalDirection direction_;

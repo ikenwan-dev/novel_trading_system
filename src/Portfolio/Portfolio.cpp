@@ -2,6 +2,7 @@
 #include "Events/FillEvent/FillEvent.h"
 #include "Events/MarketEvent/MarketEvent.h"
 #include "Events/OrderEvent/OrderEvent.h"
+#include <algorithm>
 
 void Portfolio::on_fill(const FillEvent &event) {
   double fill_cost = event.quantity_ * event.fill_price_ + event.commision_;
@@ -21,6 +22,7 @@ void Portfolio::on_market_data(const MarketEvent &event) {
   if (it != positions_.end()) {
     it->second.market_value = event.close_ * holdings_[event.ticker_];
   }
+  peak_equity_ = std::max(peak_equity_, get_total_value());
 }
 
 double Portfolio::get_total_value() const {
