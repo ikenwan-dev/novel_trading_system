@@ -2,16 +2,23 @@
 #include "Events/OrderEvent/OrderEvent.h"
 #include "ExecutionHandlers/ExecutionHandler.h"
 #include "ThreadSafeQueue/ThreadSafeQueue.h"
+#include "TransactionCostModel.h"
+#include <memory>
 
 class SimulatedExecutionHandler : public ExecutionHandler {
 public:
   SimulatedExecutionHandler(
       ThreadSafeQueue<std::shared_ptr<Event>> &event_queue,
-      DataHandler &data_handler)
-      : event_queue_(event_queue), data_handler_(data_handler) {}
+      DataHandler &data_handler,
+      std::unique_ptr<TransactionCostModel> transaction_cost_model)
+      : event_queue_(event_queue), data_handler_(data_handler),
+        transaction_cost_model_(std::move(transaction_cost_model)) {}
+
+  // TODO: this doesn't consider bid ask spread
   void on_order(const OrderEvent &order_event) override;
 
 private:
+  std::unique_ptr<TransactionCostModel> transaction_cost_model_;
   ThreadSafeQueue<std::shared_ptr<Event>> &event_queue_;
   DataHandler &data_handler_;
 };
