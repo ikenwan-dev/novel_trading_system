@@ -31,8 +31,8 @@ public:
     return (peak_equity_ - get_total_value()) / peak_equity_;
   }
 
-  double get_latest_price(const std::string &ticker) const {
-    return data_handler_.get_latest_price(ticker);
+  double get_latest_closing_price(const std::string &ticker) const {
+    return data_handler_.get_latest_price_info(ticker).close;
   }
 
 private:

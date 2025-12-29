@@ -1,5 +1,7 @@
 add_subdirectory(ThreadSafeQueue)
 add_subdirectory(Events)
-add_subdirectory(DataHandlers)
+add_subdirectory(ExecutionHandlers)
+add_subdirectory(RiskManager)
+add_subdirectory(DataHandlers) 
 add_subdirectory(Strategies)
 add_subdirectory(Portfolio)

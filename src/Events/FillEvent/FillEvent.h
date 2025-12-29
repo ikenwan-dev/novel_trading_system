@@ -5,7 +5,7 @@
 #include <chrono>
 #include <string>
 
-class FillEvent : Event {
+class FillEvent : public Event {
 public:
   FillEvent(std::string ticker, std::chrono::system_clock::time_point timestamp,
             OrderDirection direction, int quantity, double fill_price,

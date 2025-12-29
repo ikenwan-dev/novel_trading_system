@@ -8,7 +8,8 @@ void RiskManager::on_signal(const SignalEvent &signal_event) {
   // TODO: dont use fixed position sizing and instead do 1-2% based on account
   // value
   int position_size = 100;
-  double latest_price = portfolio_.get_latest_price(signal_event.ticker_);
+  double latest_price =
+      portfolio_.get_latest_closing_price(signal_event.ticker_);
   double position_value = position_size * latest_price;
 
   if (portfolio_.get_cash() < position_value) {

@@ -1,5 +1,5 @@
 // File containing simple finicial data types (Bar, Tick)
-
+#pragma once
 #include <chrono>
 #include <string>
 

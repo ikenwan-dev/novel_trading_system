@@ -1,0 +1,3 @@
+add_library(ExecutionHandlers SimulatedExecutionHandler/SimulatedExecutionHandler.cpp)
+target_link_libraries(ExecutionHandlers PRIVATE ThreadSafeQueue Events DataHandlers)
+target_include_directories(ExecutionHandlers PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..)
