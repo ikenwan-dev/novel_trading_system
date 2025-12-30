@@ -32,6 +32,8 @@ void SimulatedExecutionHandler::on_order(const OrderEvent &order_event) {
     }
   }
 
+  // TODO: will need to implement a orderbook system to manage and retry these
+  // orders
   if (!filled) {
     std::cout << "WARNING: Order not filled. Limit price not met." << std::endl;
     return;
