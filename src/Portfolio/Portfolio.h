@@ -32,6 +32,7 @@ public:
   }
 
   double get_latest_closing_price(const std::string &ticker) const {
+    // TODO: Handle case where no price info is available
     return data_handler_.get_latest_price_info(ticker).value().close;
   }
 
