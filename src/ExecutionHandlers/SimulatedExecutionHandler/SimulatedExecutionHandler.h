@@ -1,8 +1,8 @@
 #include "DataHandlers/DataHandler.h"
 #include "Events/OrderEvent/OrderEvent.h"
 #include "ExecutionHandlers/ExecutionHandler.h"
+#include "ExecutionHandlers/TransactionCostModel.h"
 #include "ThreadSafeQueue/ThreadSafeQueue.h"
-#include "TransactionCostModel.h"
 #include <memory>
 
 class SimulatedExecutionHandler : public ExecutionHandler {

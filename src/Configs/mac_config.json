@@ -1,5 +1,10 @@
 {
-    "name" : "MovingAverageCrossover",
-    "tickers" : ["AAPL"],
-    "params" : {"short_window": 50, "long_window": 200}
+    "name": "MovingAverageCrossover",
+    "tickers": [
+        "AAPL"
+    ],
+    "params": {
+        "short_window": 50,
+        "long_window": 100
+    }
 }

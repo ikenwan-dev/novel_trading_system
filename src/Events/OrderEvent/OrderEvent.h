@@ -12,7 +12,7 @@ class OrderEvent : public Event {
 public:
   OrderEvent(std::string ticker,
              std::chrono::system_clock::time_point timestamp, int quantity,
-             OrderDirection direction, OrderType order_type,
+             OrderDirection direction, OrderType order_type = OrderType::MARKET,
              std::optional<double> limit_price = std::nullopt)
       : ticker_(std::move(ticker)), timestamp_(timestamp), quantity_(quantity),
         direction_(direction), order_type_(order_type),
