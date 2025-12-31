@@ -14,5 +14,8 @@ target_link_libraries(MainEventLoop PRIVATE
     Strategies 
     Events 
     ThreadSafeQueue
+    ExecutionHandlers
+    RiskManager
+    Portfolio
     glaze::glaze
 )

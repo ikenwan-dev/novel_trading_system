@@ -4,6 +4,10 @@
 #include <iostream>
 #include <memory>
 
+// While this will work in backtesting. For live trading, we will need to
+// implement a orderbook system to manage and retry these orders.
+// Also we will need to handle slippage and other market microstructure effects
+// and fail gracefully
 void SimulatedExecutionHandler::on_order(const OrderEvent &order_event) {
   auto price_info = data_handler_.get_latest_price_info(order_event.ticker_);
   bool filled = false;

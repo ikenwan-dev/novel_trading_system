@@ -14,8 +14,7 @@
 
 StrategyConfig load_config_from_file(const std::string &filepath) {
   StrategyConfig sc;
-  auto ec =
-      glz::read_file_json(sc, "../src/Configs/mac_config.json", std::string{});
+  auto ec = glz::read_file_json(sc, filepath, std::string{});
 
   if (ec) {
     // Glaze returns an error object that contains the error code and location
@@ -44,7 +43,7 @@ int main() {
   std::cout << "Event queue created" << std::endl;
 
   std::map<std::string, std::string> files{
-      {"AAPL", "../src/test_data/aapl.us.txt"},
+      {"AAPL", "src/test_data/aapl.us.txt"},
   };
 
   // Load data handler
@@ -53,7 +52,9 @@ int main() {
   std::cout << "Historic CSV data handler created" << std::endl;
 
   // Load strategy from config
-  StrategyConfig sc = load_config_from_file("../src/Configs/mac_config.json");
+  // TODO: make this configurable. create a factory pattern (overload these
+  // functions)
+  StrategyConfig sc = load_config_from_file("src/Configs/mac_config.json");
   auto strategy = std::dynamic_pointer_cast<MovingAverageCrossover>(
       load_strategy_from_config(sc, *event_queue));
   std::cout << "Strategy loaded: " << sc.name << std::endl;
@@ -71,6 +72,41 @@ int main() {
   // Execution handler
   auto execution_handler = std::make_shared<SimulatedExecutionHandler>(
       *event_queue, *data_handler, std::move(transaction_cost_model));
+
+  // while (data_handler->is_running()) {
+  //   data_handler->update();
+
+  //   std::shared_ptr<Event> event;
+  //   while (event_queue->try_pop(event)) {
+  //     switch (event->get_type()) {
+  //     case EventType::Signal: {
+  //       auto signal_event = std::dynamic_pointer_cast<SignalEvent>(event);
+  //       risk_manager->on_signal(*signal_event);
+  //       break;
+  //     }
+  //     case EventType::Market: {
+  //       auto market_event = std::dynamic_pointer_cast<MarketEvent>(event);
+  //       strategy->on_market_data(*market_event);
+  //       portfolio->on_market_data(*market_event);
+  //       break;
+  //     }
+  //     case EventType::Order: {
+  //       auto order_event = std::dynamic_pointer_cast<OrderEvent>(event);
+  //       execution_handler->on_order(*order_event);
+  //       break;
+  //     }
+  //     case EventType::Fill: {
+  //       auto fill_event = std::dynamic_pointer_cast<FillEvent>(event);
+  //       portfolio->on_fill(*fill_event);
+  //       break;
+  //     }
+  //     default: {
+  //       std::cout << "Unknown event type" << std::endl;
+  //       break;
+  //     }
+  //     }
+  //   }
+  // }
 
   return 0;
 }
