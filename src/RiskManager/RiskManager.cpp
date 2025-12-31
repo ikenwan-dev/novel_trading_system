@@ -22,7 +22,8 @@ void RiskManager::on_signal(const SignalEvent &signal_event) {
   if (portfolio_.get_current_drawdown() > 0.2) {
     // TODO: this should be a configurable parameter
     // TODO: this should liquidate all positions
-    std::cout << "Current drawdown is too high. Halting strategy." << std::endl;
+    std::cout << "RiskManager: Current drawdown is too high. Halting strategy."
+              << std::endl;
     return;
   }
 

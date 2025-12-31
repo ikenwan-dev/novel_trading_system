@@ -5,12 +5,14 @@
 #include <algorithm>
 
 void Portfolio::on_fill(const FillEvent &event) {
-  double fill_cost = event.quantity_ * event.fill_price_ + event.commision_;
+  double fill_cost = event.quantity_ * event.fill_price_;
   if (event.direction_ == OrderDirection::BUY) {
+    fill_cost += event.commision_;
     cash_ -= fill_cost;
     holdings_[event.ticker_] += event.quantity_;
     positions_[event.ticker_].cost_basis += fill_cost;
   } else {
+    fill_cost -= event.commision_;
     cash_ += fill_cost;
     holdings_[event.ticker_] -= event.quantity_;
     positions_[event.ticker_].cost_basis -= fill_cost;
@@ -30,7 +32,7 @@ double Portfolio::get_total_value() const {
   for (const auto &[ticker, position] : positions_) {
     total_market_value += position.market_value;
   }
-  return total_market_value;
+  return total_market_value + cash_;
 }
 
 double Portfolio::get_unrealized_pnl() const {

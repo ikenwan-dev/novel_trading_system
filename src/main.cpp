@@ -119,7 +119,8 @@ int main() {
       }
     }
     std::cout << "Event loop finished. Portfolio contains a value of "
-              << portfolio->get_total_value() << std::endl;
+              << portfolio->get_total_value()
+              << " and a cash amt of : " << portfolio->get_cash() << std::endl;
   } catch (const std::exception &e) {
     std::cerr << "Exception: " << e.what() << std::endl;
     return 1;
