@@ -37,76 +37,93 @@ std::shared_ptr<Strategy> load_strategy_from_config(
 
 int main() {
 
-  // Create event queue
-  auto event_queue =
-      std::make_shared<ThreadSafeQueue<std::shared_ptr<Event>>>();
-  std::cout << "Event queue created" << std::endl;
+  try { // Create event queue
+    std::cout << "Initializing components...\n" << std::endl;
 
-  std::map<std::string, std::string> files{
-      {"AAPL", "src/test_data/aapl.us.txt"},
-  };
+    auto event_queue =
+        std::make_shared<ThreadSafeQueue<std::shared_ptr<Event>>>();
+    std::cout << "Event queue created" << std::endl;
 
-  // Load data handler
-  auto data_handler =
-      std::make_shared<HistoricCSVDataHandler>(*event_queue, files);
-  std::cout << "Historic CSV data handler created" << std::endl;
+    std::map<std::string, std::string> files{
+        {"AAPL", std::string(PROJECT_ROOT) + "/src/test_data/aapl.us.txt"},
+    };
 
-  // Load strategy from config
-  // TODO: make this configurable. create a factory pattern (overload these
-  // functions)
-  StrategyConfig sc = load_config_from_file("src/Configs/mac_config.json");
-  auto strategy = std::dynamic_pointer_cast<MovingAverageCrossover>(
-      load_strategy_from_config(sc, *event_queue));
-  std::cout << "Strategy loaded: " << sc.name << std::endl;
+    // Load data handler
+    auto data_handler =
+        std::make_shared<HistoricCSVDataHandler>(*event_queue, files);
+    std::cout << "Historic CSV data handler created" << std::endl;
 
-  // Create portfolio
-  auto portfolio = std::make_shared<Portfolio>(*data_handler, 100000.0);
+    // Load strategy from config
+    // TODO: make this configurable. create a factory pattern (overload these
+    // functions)
+    StrategyConfig sc = load_config_from_file(std::string(PROJECT_ROOT) +
+                                              "/src/Configs/mac_config.json");
+    auto strategy = std::dynamic_pointer_cast<MovingAverageCrossover>(
+        load_strategy_from_config(sc, *event_queue));
+    std::cout << "Strategy loaded: " << sc.name << std::endl;
 
-  // Create risk manager
-  auto risk_manager = std::make_shared<RiskManager>(*portfolio, *event_queue);
+    // Create portfolio
+    auto portfolio = std::make_shared<Portfolio>(*data_handler, 100000.0);
+    std::cout << "Portfolio created with total value of: "
+              << portfolio->get_total_value() << std::endl;
 
-  // Create transaction cost model
-  auto transaction_cost_model =
-      std::make_unique<PershareCommissionModel>(0.005, 1.0);
+    // Create risk manager
+    auto risk_manager = std::make_shared<RiskManager>(*portfolio, *event_queue);
+    std::cout << "Risk manager created" << std::endl;
 
-  // Execution handler
-  auto execution_handler = std::make_shared<SimulatedExecutionHandler>(
-      *event_queue, *data_handler, std::move(transaction_cost_model));
+    // Create transaction cost model
+    auto transaction_cost_model =
+        std::make_unique<PershareCommissionModel>(0.005, 1.0);
+    std::cout << "Transaction cost model created" << std::endl;
 
-  // while (data_handler->is_running()) {
-  //   data_handler->update();
+    // Execution handler
+    auto execution_handler = std::make_shared<SimulatedExecutionHandler>(
+        *event_queue, *data_handler, std::move(transaction_cost_model));
+    std::cout << "Execution handler created" << std::endl;
 
-  //   std::shared_ptr<Event> event;
-  //   while (event_queue->try_pop(event)) {
-  //     switch (event->get_type()) {
-  //     case EventType::Signal: {
-  //       auto signal_event = std::dynamic_pointer_cast<SignalEvent>(event);
-  //       risk_manager->on_signal(*signal_event);
-  //       break;
-  //     }
-  //     case EventType::Market: {
-  //       auto market_event = std::dynamic_pointer_cast<MarketEvent>(event);
-  //       strategy->on_market_data(*market_event);
-  //       portfolio->on_market_data(*market_event);
-  //       break;
-  //     }
-  //     case EventType::Order: {
-  //       auto order_event = std::dynamic_pointer_cast<OrderEvent>(event);
-  //       execution_handler->on_order(*order_event);
-  //       break;
-  //     }
-  //     case EventType::Fill: {
-  //       auto fill_event = std::dynamic_pointer_cast<FillEvent>(event);
-  //       portfolio->on_fill(*fill_event);
-  //       break;
-  //     }
-  //     default: {
-  //       std::cout << "Unknown event type" << std::endl;
-  //       break;
-  //     }
-  //     }
-  //   }
-  // }
+    std::cout << "Initialization complete. Starting event loop...\n"
+              << std::endl;
+
+    while (data_handler->is_running()) {
+      data_handler->update();
+
+      std::shared_ptr<Event> event;
+      while (event_queue->try_pop(event)) {
+        switch (event->get_type()) {
+        case EventType::Signal: {
+          auto signal_event = std::dynamic_pointer_cast<SignalEvent>(event);
+          risk_manager->on_signal(*signal_event);
+          break;
+        }
+        case EventType::Market: {
+          auto market_event = std::dynamic_pointer_cast<MarketEvent>(event);
+          strategy->on_market_data(*market_event);
+          portfolio->on_market_data(*market_event);
+          break;
+        }
+        case EventType::Order: {
+          auto order_event = std::dynamic_pointer_cast<OrderEvent>(event);
+          execution_handler->on_order(*order_event);
+          break;
+        }
+        case EventType::Fill: {
+          auto fill_event = std::dynamic_pointer_cast<FillEvent>(event);
+          portfolio->on_fill(*fill_event);
+          break;
+        }
+        default: {
+          std::cout << "Unknown event type" << std::endl;
+          break;
+        }
+        }
+      }
+    }
+    std::cout << "Event loop finished. Portfolio contains a value of "
+              << portfolio->get_total_value() << std::endl;
+  } catch (const std::exception &e) {
+    std::cerr << "Exception: " << e.what() << std::endl;
+    return 1;
+  }
 
   return 0;
 }

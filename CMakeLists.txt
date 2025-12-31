@@ -19,3 +19,5 @@ target_link_libraries(MainEventLoop PRIVATE
     Portfolio
     glaze::glaze
 )
+
+target_compile_definitions(MainEventLoop PRIVATE PROJECT_ROOT="${CMAKE_CURRENT_SOURCE_DIR}")
