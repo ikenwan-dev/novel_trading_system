@@ -6,8 +6,27 @@
 #include <string>
 
 enum class OrderDirection { BUY, SELL };
+inline std::ostream &operator<<(std::ostream &os, OrderDirection od) {
+  switch (od) {
+  case OrderDirection::BUY:
+    return os << "BUY";
+  case OrderDirection::SELL:
+    return os << "SELL";
+  default:
+    return os << "UNKNOWN";
+  }
+}
 enum class OrderType { MARKET, LIMIT };
-
+inline std::ostream &operator<<(std::ostream &os, OrderType ot) {
+  switch (ot) {
+  case OrderType::MARKET:
+    return os << "MARKET";
+  case OrderType::LIMIT:
+    return os << "LIMIT";
+  default:
+    return os << "UNKNOWN";
+  }
+}
 class OrderEvent : public Event {
 public:
   OrderEvent(std::string ticker,

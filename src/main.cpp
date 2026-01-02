@@ -121,6 +121,12 @@ int main() {
     std::cout << "Event loop finished. Portfolio contains a value of "
               << portfolio->get_total_value()
               << " and a cash amt of : " << portfolio->get_cash() << std::endl;
+    std::cout << "unrealized pnl: " << portfolio->get_unrealized_pnl()
+              << std::endl;
+
+    for (const auto &[key, val] : portfolio->all_holdings()) {
+      std::cout << key << " : " << val << std::endl;
+    }
   } catch (const std::exception &e) {
     std::cerr << "Exception: " << e.what() << std::endl;
     return 1;
