@@ -24,6 +24,8 @@ public:
 
   double get_cash() const { return cash_; }
 
+  double get_peak_equity() const { return peak_equity_; }
+
   double get_current_drawdown() const {
     if (peak_equity_ <= 0.0) {
       return 0.0;
@@ -31,7 +33,7 @@ public:
     return (peak_equity_ - get_total_value()) / peak_equity_;
   }
 
-  auto all_holdings() const { return holdings_; }
+  auto all_positions() const { return positions_; }
 
   double get_latest_closing_price(const std::string &ticker) const {
     // TODO: Handle case where no price info is available
@@ -44,12 +46,11 @@ private:
   double cash_;
   double peak_equity_;
 
-  // maps from ticker to share quantities
-  std::map<std::string, int> holdings_;
-
+  // per share position info + quantity
   struct Position {
     double market_value = 0.0;
     double cost_basis = 0.0;
+    int quantity = 0;
   };
   std::map<std::string, Position> positions_;
 };

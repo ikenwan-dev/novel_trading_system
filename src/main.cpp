@@ -124,8 +124,8 @@ int main() {
     std::cout << "unrealized pnl: " << portfolio->get_unrealized_pnl()
               << std::endl;
 
-    for (const auto &[key, val] : portfolio->all_holdings()) {
-      std::cout << key << " : " << val << std::endl;
+    for (const auto &[key, val] : portfolio->all_positions()) {
+      std::cout << key << " : " << val.quantity << std::endl;
     }
   } catch (const std::exception &e) {
     std::cerr << "Exception: " << e.what() << std::endl;
