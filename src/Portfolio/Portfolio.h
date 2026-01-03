@@ -46,7 +46,6 @@ private:
   double cash_;
   double peak_equity_;
 
-  // per share position info + quantity
   struct Position {
     double market_value = 0.0;
     double cost_basis = 0.0;
