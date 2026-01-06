@@ -8,7 +8,9 @@
 #include "Strategies/Strategy.h"
 #include "Strategies/StrategyConfig.h"
 #include "ThreadSafeQueue/ThreadSafeQueue.h"
+#include <fstream>
 #include <glaze/json/read.hpp>
+#include <iomanip> // std::put_time
 #include <iostream>
 #include <memory>
 #include <ranges>
@@ -37,6 +39,22 @@ std::shared_ptr<Strategy> load_strategy_from_config(
   } else {
     throw std::runtime_error("Unknown strategy name: " + sc.name);
   }
+}
+
+void write_equity_curve_to_csv(const std::vector<EquityDataPoint> &equity_curve,
+                               const std::string &filepath) {
+  std::ofstream file(filepath);
+  if (!file.is_open()) {
+    throw std::runtime_error("Could not open file: " + filepath);
+  }
+  file << "timestamp,equity\n";
+  for (const auto &point : equity_curve) {
+    auto time = std::chrono::system_clock::to_time_t(point.timestamp);
+    std::tm tm = *std::localtime(&time);
+    file << std::put_time(&tm, "%Y-%m-%d %H:%M:%S") << "," << point.value
+         << "\n";
+  }
+  file.close();
 }
 
 int main() {
@@ -141,6 +159,8 @@ int main() {
 
     double cagr = Statistics::calculate_cagr(equity_curve);
     std::cout << "CAGR: " << cagr << std::endl;
+    write_equity_curve_to_csv(equity_curve, "equity_curve.csv");
+
   } catch (const std::exception &e) {
     std::cerr << "Exception: " << e.what() << std::endl;
     return 1;
