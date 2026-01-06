@@ -4,6 +4,7 @@
 #include "Events/OrderEvent/OrderEvent.h"
 #include <algorithm>
 #include <iostream>
+
 void Portfolio::on_fill(const FillEvent &event) {
   auto &pos = positions_[event.ticker_];
   auto &quantity = pos.quantity;
@@ -68,6 +69,7 @@ void Portfolio::on_fill(const FillEvent &event) {
             << " cost basis: " << pos.cost_basis
             << " market value: " << pos.market_value << std::endl;
 }
+
 void Portfolio::on_market_data(const MarketEvent &event) {
   auto it = positions_.find(event.ticker_);
   if (it != positions_.end()) {

@@ -10,13 +10,13 @@ add_subdirectory(src)
 add_executable(MainEventLoop src/main.cpp)
 
 target_link_libraries(MainEventLoop PRIVATE 
-    DataHandlers 
     Strategies 
-    Events 
-    ThreadSafeQueue
     ExecutionHandlers
     RiskManager
     Portfolio
+    DataHandlers 
+    Events 
+    ThreadSafeQueue
     glaze::glaze
 )
 

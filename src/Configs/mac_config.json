@@ -1,10 +1,10 @@
 {
     "name": "MovingAverageCrossover",
-    "tickers": [
-        "AAPL"
-    ],
+    "ticker_map": {
+        "AAPL": "/src/test_data/aapl.us.txt"
+    },
     "params": {
-        "short_window": 50,
-        "long_window": 100
+        "short_window": 20,
+        "long_window": 40
     }
 }

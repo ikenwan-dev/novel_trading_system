@@ -10,6 +10,7 @@
 #include <glaze/json/read.hpp>
 #include <iostream>
 #include <memory>
+#include <ranges>
 #include <string>
 
 StrategyConfig load_config_from_file(const std::string &filepath) {
@@ -27,8 +28,10 @@ std::shared_ptr<Strategy> load_strategy_from_config(
     const StrategyConfig &sc,
     ThreadSafeQueue<std::shared_ptr<Event>> &event_queue) {
   if (sc.name == "MovingAverageCrossover") {
+    auto keys_view = std::views::keys(sc.ticker_map);
+    std::vector<std::string> tickers{keys_view.begin(), keys_view.end()};
     return std::make_shared<MovingAverageCrossover>(
-        event_queue, sc.tickers, sc.params.at("short_window"),
+        event_queue, tickers, sc.params.at("short_window"),
         sc.params.at("long_window"));
   } else {
     throw std::runtime_error("Unknown strategy name: " + sc.name);
@@ -36,22 +39,12 @@ std::shared_ptr<Strategy> load_strategy_from_config(
 }
 
 int main() {
-
   try { // Create event queue
     std::cout << "Initializing components...\n" << std::endl;
 
     auto event_queue =
         std::make_shared<ThreadSafeQueue<std::shared_ptr<Event>>>();
     std::cout << "Event queue created" << std::endl;
-
-    std::map<std::string, std::string> files{
-        {"AAPL", std::string(PROJECT_ROOT) + "/src/test_data/aapl.us.txt"},
-    };
-
-    // Load data handler
-    auto data_handler =
-        std::make_shared<HistoricCSVDataHandler>(*event_queue, files);
-    std::cout << "Historic CSV data handler created" << std::endl;
 
     // Load strategy from config
     // TODO: make this configurable. create a factory pattern (overload these
@@ -61,6 +54,19 @@ int main() {
     auto strategy = std::dynamic_pointer_cast<MovingAverageCrossover>(
         load_strategy_from_config(sc, *event_queue));
     std::cout << "Strategy loaded: " << sc.name << std::endl;
+
+    std::map<std::string, std::string> files;
+    for (const auto &[ticker, filepath] : sc.ticker_map) {
+      std::cout << "Ticker: " << ticker << " Filepath: " << filepath
+                << std::endl;
+      files[ticker] = std::string(PROJECT_ROOT) + filepath;
+    }
+    std::cout << "Files: created" << std::endl;
+
+    // Load data handler
+    auto data_handler =
+        std::make_shared<HistoricCSVDataHandler>(*event_queue, files);
+    std::cout << "Historic CSV data handler created" << std::endl;
 
     // Create portfolio
     auto portfolio = std::make_shared<Portfolio>(*data_handler, 100000.0);
