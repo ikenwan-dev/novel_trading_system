@@ -1,7 +1,8 @@
 {
     "name": "MovingAverageCrossover",
     "ticker_map": {
-        "AAPL": "/src/test_data/aapl.us.txt"
+        "AAPL": "/src/test_data/aapl.us.txt",
+        "GOOG": "/src/test_data/goog.us.txt"
     },
     "params": {
         "short_window": 20,
