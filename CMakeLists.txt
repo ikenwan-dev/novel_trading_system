@@ -6,11 +6,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_subdirectory(third_party)
 add_subdirectory(src)
 
-
 add_executable(MainEventLoop src/main.cpp)
 
 target_link_libraries(MainEventLoop PRIVATE 
-    Strategies 
+    Strategies
+    Statistics
     ExecutionHandlers
     RiskManager
     Portfolio

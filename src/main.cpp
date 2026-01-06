@@ -3,6 +3,7 @@
 #include "ExecutionHandlers/TransactionCostModel.h"
 #include "Portfolio/Portfolio.h"
 #include "RiskManager/RiskManager.h"
+#include "Statistics/Statistics.h"
 #include "Strategies/MovingAverageCrossover/MovingAverageCrossover.h"
 #include "Strategies/Strategy.h"
 #include "Strategies/StrategyConfig.h"
@@ -87,6 +88,8 @@ int main() {
         *event_queue, *data_handler, std::move(transaction_cost_model));
     std::cout << "Execution handler created" << std::endl;
 
+    std::vector<EquityDataPoint> equity_curve;
+
     std::cout << "Initialization complete. Starting event loop...\n"
               << std::endl;
 
@@ -105,6 +108,8 @@ int main() {
           auto market_event = std::dynamic_pointer_cast<MarketEvent>(event);
           strategy->on_market_data(*market_event);
           portfolio->on_market_data(*market_event);
+          equity_curve.push_back(
+              {market_event->timestamp_, portfolio->get_total_value()});
           break;
         }
         case EventType::Order: {
@@ -133,6 +138,9 @@ int main() {
     for (const auto &[key, val] : portfolio->all_positions()) {
       std::cout << key << " : " << val.quantity << std::endl;
     }
+
+    double cagr = Statistics::calculate_cagr(equity_curve);
+    std::cout << "CAGR: " << cagr << std::endl;
   } catch (const std::exception &e) {
     std::cerr << "Exception: " << e.what() << std::endl;
     return 1;
