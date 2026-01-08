@@ -2,7 +2,11 @@
     "name": "MovingAverageCrossover",
     "ticker_map": {
         "AAPL": "/src/test_data/aapl.us.txt",
-        "GOOG": "/src/test_data/goog.us.txt"
+        "GOOG": "/src/test_data/goog.us.txt",
+        "MSFT": "/src/test_data/msft.us.txt",
+        "AMZN": "/src/test_data/amzn.us.txt",
+        "WMT": "/src/test_data/wmt.us.txt",
+        "META": "/src/test_data/meta.us.txt"
     },
     "params": {
         "short_window": 20,

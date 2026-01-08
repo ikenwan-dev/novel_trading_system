@@ -10,7 +10,7 @@ struct Bar {
   double high;
   double low;
   double close;
-  int volume;
+  double volume;
   // This allows std::sort to work
   bool operator<(const Bar &other) const { return timestamp < other.timestamp; }
 };

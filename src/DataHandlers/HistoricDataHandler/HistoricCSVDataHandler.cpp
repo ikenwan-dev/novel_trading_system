@@ -58,8 +58,8 @@ HistoricCSVDataHandler::load_stooq_file(const std::string &filename) {
   std::string dateStr;
   std::string timeStr;
   double open, high, low, close;
-  long long vol;
-  long long openInt;
+  double vol;
+  double openInt;
 
   while (in.read_row(ticker, perStr, dateStr, timeStr, open, high, low, close,
                      vol, openInt)) {
