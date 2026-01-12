@@ -87,13 +87,13 @@ HistoricCSVDataHandler::load_stooq_file(const std::string &filename) {
 
 HistoricCSVDataHandler::HistoricCSVDataHandler(
     ThreadSafeQueue<std::shared_ptr<Event>> &event_queue,
-    const std::map<std::string, std::string> &csv_files)
+    const std::unordered_map<std::string, std::string> &csv_files)
     : event_queue_(event_queue) {
   load_all_data(csv_files);
 }
 
 void HistoricCSVDataHandler::load_all_data(
-    const std::map<std::string, std::string> &csv_files) {
+    const std::unordered_map<std::string, std::string> &csv_files) {
   // TODO: Add parameter detailing which load function to call, if we ever want
   // to add more data sources
   for (const auto &entry : csv_files) {

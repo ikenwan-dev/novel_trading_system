@@ -74,7 +74,7 @@ int main() {
         load_strategy_from_config(sc, *event_queue));
     std::cout << "Strategy loaded: " << sc.name << std::endl;
 
-    std::map<std::string, std::string> files;
+    std::unordered_map<std::string, std::string> files;
     for (const auto &[ticker, filepath] : sc.ticker_map) {
       std::cout << "Ticker: " << ticker << " Filepath: " << filepath
                 << std::endl;
