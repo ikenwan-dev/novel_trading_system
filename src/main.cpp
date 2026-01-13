@@ -8,8 +8,8 @@
 #include "Strategies/Strategy.h"
 #include "Strategies/StrategyConfig.h"
 #include "ThreadSafeQueue/ThreadSafeQueue.h"
+#include "glaze/json/read.hpp"
 #include <fstream>
-#include <glaze/json/read.hpp>
 #include <iomanip> // std::put_time
 #include <iostream>
 #include <memory>
