@@ -46,6 +46,9 @@ TEST(PortfolioTest, HandlesSellFill) {
       100000.0 - (150.0 * 100.0 + 5.0) + (160.0 * 50.0 - 5.0);
   ASSERT_DOUBLE_EQ(portfolio.get_cash(), expected_cash);
   ASSERT_EQ(portfolio.all_positions().at("AAPL").quantity, 50);
+  ASSERT_EQ(portfolio.all_positions().at("AAPL").market_value, 50 * 160);
+  ASSERT_EQ(portfolio.all_positions().at("AAPL").cost_basis,
+            (100 * 150 + 5) - (50 * 150 + 2.5));
 }
 
 TEST(PortfolioTest, HandlesShortFill) {
