@@ -1,0 +1,29 @@
+#github/workflows/main.yaml
+name: C++ CI
+
+#run on every push and pull from/to main
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+    
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4 # better than v3?
+        with:
+          submodules: 'recursive' #needed for google test?
+
+      - name: Setup CMake
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build ${{github.workspace}}/build
+
+      - name: Run Tests
+        working-directory: ${{github.workspace}}/build
+        run: ctest
+      
+  
