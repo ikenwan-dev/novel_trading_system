@@ -1,5 +1,5 @@
 #pragma once
-#include "../Events/MarketEvent/MarketEvent.h"
+#include "Events/MarketEvent/MarketEvent.h"
 
 class Strategy {
 public:

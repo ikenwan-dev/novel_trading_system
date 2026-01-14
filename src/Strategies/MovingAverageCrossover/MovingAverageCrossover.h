@@ -17,6 +17,7 @@ public:
   void on_market_data(const MarketEvent &event) override;
 
 private:
+  friend class MovingAverageCrossoverFixture;
   double calculate_moving_average(const std::deque<double> &prices);
   ThreadSafeQueue<std::shared_ptr<Event>> &event_queue_;
   const std::vector<std::string> tickers_;
