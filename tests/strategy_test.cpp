@@ -18,11 +18,6 @@ protected:
     mac = std::make_unique<MovingAverageCrossover>(event_queue, tickers,
                                                    short_window, long_window);
   }
-
-  void SetUp() override {
-    // Reset or initialize engine here
-    // engine = Engine(); // If Engine has a proper assignment op
-  }
 };
 
 TEST_F(MovingAverageCrossoverFixture, CalculatesMovingAverage) {
