@@ -33,7 +33,7 @@ public:
     return (peak_equity_ - get_total_value()) / peak_equity_;
   }
 
-  auto all_positions() const { return positions_; }
+  const auto &all_positions() const { return positions_; }
 
   double get_latest_closing_price(const std::string &ticker) const {
     // TODO: Handle case where no price info is available
