@@ -66,7 +66,7 @@ int main() {
     std::cout << "Event queue created" << std::endl;
 
     // Load strategy from config
-    // TODO: make this configurable. create a factory pattern (overload these
+    // TODO: make this configurable. create a factory pattern (or overload these
     // functions)
     StrategyConfig sc = load_config_from_file(std::string(PROJECT_ROOT) +
                                               "/src/Configs/mac_config.json");
