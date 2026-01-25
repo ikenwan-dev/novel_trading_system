@@ -3,8 +3,8 @@
 
 int main() {
   databento::DbnFileStore dbnFileStore = databento::DbnFileStore(
-      "/Users/ikech/Documents/quantdev/XNAS-20260120-7W93CD9NGT/"
-      "xnas-itch-20251223.mbo.dbn.zst");
+      std::string(PROJECT_ROOT) + "/src/test_data/XNAS-20260120-7W93CD9NGT/"
+                                  "xnas-itch-20251223.mbo.dbn.zst");
   std::cout << dbnFileStore.GetMetadata() << '\n';
   //   long long total = 0;
   //   while (const databento::Record *record = dbnFileStore.NextRecord()) {
