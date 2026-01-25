@@ -13,7 +13,8 @@ add_subdirectory(third_party)
 add_subdirectory(src)
 add_subdirectory(tests)
 
- 
+add_executable(example src/example.cpp)
+target_link_libraries(example PRIVATE databento::databento)
 add_executable(MainEventLoop src/main.cpp)
 
 target_link_libraries(MainEventLoop PRIVATE 
@@ -28,3 +29,4 @@ target_link_libraries(MainEventLoop PRIVATE
     glaze::glaze
 )
 target_compile_definitions(MainEventLoop PRIVATE PROJECT_ROOT="${CMAKE_CURRENT_SOURCE_DIR}")
+target_compile_definitions(example PRIVATE PROJECT_ROOT="${CMAKE_CURRENT_SOURCE_DIR}")

@@ -20,3 +20,10 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(googletest)
 
+#Fetch databento libraries
+FetchContent_Declare(
+  databento
+  GIT_REPOSITORY https://github.com/databento/databento-cpp
+  GIT_TAG main
+)
+FetchContent_MakeAvailable(databento)
