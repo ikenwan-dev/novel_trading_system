@@ -1,0 +1,4 @@
+Soon to be deprecated
+
+This class was responsible for reading csv bar data and producing market events 
+in favor of DataProducers
