@@ -13,6 +13,5 @@ public:
 private:
   std::vector<std::string> mbo_filepaths;
   std::size_t file_index;
-
-  // databento::DbnFileStore dbnFileStore;
+  static constexpr size_t RING_BUFFER_SIZE = 65536;
 };
