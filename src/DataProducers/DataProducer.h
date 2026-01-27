@@ -5,13 +5,18 @@
 class DataProducer {
 public:
   DataProducer(const std::string &shm_name, size_t shm_size)
-      : shm(shm_name, shm_size, true) {}
+      : shm_(shm_name, shm_size, true) {}
   virtual void run() = 0;
-  ~DataProducer() {
+  virtual ~DataProducer() {
     std::cout << "Unlinking shared memory...\n";
-    shm.unlink();
+    shm_.unlink();
   }
 
+  DataProducer(const DataProducer &) = delete;
+  DataProducer &operator=(const DataProducer &) = delete;
+  DataProducer(DataProducer &&) = delete;
+  DataProducer &operator=(DataProducer &&) = delete;
+
 protected:
-  SharedMemory shm;
+  SharedMemory shm_;
 };
