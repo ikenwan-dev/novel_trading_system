@@ -1,4 +1,5 @@
 #pragma once
+#include "Constants/Constants.h"
 #include "DataProducers/DataProducer.h"
 #include <string>
 #include <vector>
@@ -13,5 +14,4 @@ public:
 private:
   std::vector<std::string> mbo_filepaths;
   std::size_t file_index;
-  static constexpr size_t RING_BUFFER_SIZE = 65536;
 };

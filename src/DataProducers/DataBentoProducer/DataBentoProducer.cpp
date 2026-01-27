@@ -6,15 +6,16 @@
 
 DataBentoProducer::DataBentoProducer(const std::string &shm_name,
                                      const std::vector<std::string> filepaths)
-    : DataProducer(
-          shm_name,
-          sizeof(SharedRingBuffer<databento::MboMsg, RING_BUFFER_SIZE>)),
+    : DataProducer(shm_name,
+                   sizeof(SharedRingBuffer<databento::MboMsg,
+                                           Constants::RING_BUFFER_SIZE>)),
       mbo_filepaths(filepaths), file_index(0) {
   std::sort(mbo_filepaths.begin(), mbo_filepaths.end());
 }
 
 void DataBentoProducer::run() {
-  using RingBuffer = SharedRingBuffer<databento::MboMsg, RING_BUFFER_SIZE>;
+  using RingBuffer =
+      SharedRingBuffer<databento::MboMsg, Constants::RING_BUFFER_SIZE>;
   auto deleter = [](RingBuffer *p) {
     if (p) {
       p->~RingBuffer(); // Explicitly call destructor

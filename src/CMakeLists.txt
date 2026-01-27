@@ -8,3 +8,5 @@ add_subdirectory(Portfolio)
 add_subdirectory(Statistics)
 add_subdirectory(SharedMemory)
 add_subdirectory(DataProducers)
+
+add_subdirectory(Constants)
