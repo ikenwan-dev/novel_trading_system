@@ -30,7 +30,10 @@ int main() {
   for (const auto &filepath : filepaths) {
     std::cout << filepath << '\n';
   }
-  DataBentoProducer dataBentoProducer("test_shm", filepaths);
+
+  DataBentoProducer::Writer writer("test_shm");
+  DataBentoProducer dataBentoProducer(filepaths, writer);
   dataBentoProducer.run();
+  writer.unlink();
   return 0;
 }

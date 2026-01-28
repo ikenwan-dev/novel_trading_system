@@ -1,16 +1,9 @@
 #pragma once
-#include "SharedMemory/SharedMemory.h"
-#include <iostream>
 
 class DataProducer {
 public:
-  DataProducer(const std::string &shm_name, size_t shm_size)
-      : shm_(shm_name, shm_size, true) {}
   virtual void run() = 0;
-  virtual ~DataProducer() {
-    std::cout << "Unlinking shared memory...\n";
-    shm_.unlink();
-  }
+  virtual ~DataProducer() = default;
 
   DataProducer(const DataProducer &) = delete;
   DataProducer &operator=(const DataProducer &) = delete;
@@ -18,5 +11,5 @@ public:
   DataProducer &operator=(DataProducer &&) = delete;
 
 protected:
-  SharedMemory shm_;
+  DataProducer() = default;
 };

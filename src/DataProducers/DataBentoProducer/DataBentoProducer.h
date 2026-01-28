@@ -1,18 +1,16 @@
 #pragma once
 #include "Constants/Constants.h"
 #include "DataProducers/DataProducer.h"
-#include "SharedMemory/SharedRingBuffer.h"
+#include "SharedMemory/IPCWriter.h"
 #include <databento/historical.hpp>
 #include <string>
 #include <vector>
 
-using RingBuffer =
-    SharedRingBuffer<databento::MboMsg, Constants::RING_BUFFER_SIZE>;
-
 class DataBentoProducer : public DataProducer {
 public:
-  DataBentoProducer(const std::string &shm_name,
-                    const std::vector<std::string> filepaths);
+  using Writer = IPCWriter<databento::MboMsg, Constants::RING_BUFFER_SIZE>;
+
+  DataBentoProducer(const std::vector<std::string> filepaths, Writer &writer);
   ~DataBentoProducer();
 
   DataBentoProducer(const DataBentoProducer &) = delete;
@@ -24,5 +22,5 @@ public:
 
 private:
   std::vector<std::string> mbo_filepaths_;
-  RingBuffer *ring_buffer_;
+  Writer &writer_;
 };
