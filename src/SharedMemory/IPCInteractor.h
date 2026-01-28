@@ -4,15 +4,15 @@
 #include <iostream>
 #include <string>
 
-template <typename T, size_t Capacity> class IPCWriter {
+template <typename T, size_t Capacity> class IPCInteractor {
   using RingBuffer = SharedRingBuffer<T, Capacity>;
 
 public:
-  IPCWriter(const std::string &shm_name, const bool create = true)
+  IPCInteractor(const std::string &shm_name, const bool create = true)
       : shm_(shm_name, sizeof(RingBuffer), create),
         ring_buffer_(new(shm_.get_ptr()) RingBuffer()) {}
 
-  ~IPCWriter() {
+  ~IPCInteractor() {
     if (ring_buffer_) {
       ring_buffer_->~RingBuffer();
     }
@@ -24,12 +24,13 @@ public:
   }
 
   // Delete copy/move as this owns a resource
-  IPCWriter(const IPCWriter &) = delete;
-  IPCWriter &operator=(const IPCWriter &) = delete;
-  IPCWriter(IPCWriter &&) = delete;
-  IPCWriter &operator=(IPCWriter &&) = delete;
+  IPCInteractor(const IPCInteractor &) = delete;
+  IPCInteractor &operator=(const IPCInteractor &) = delete;
+  IPCInteractor(IPCInteractor &&) = delete;
+  IPCInteractor &operator=(IPCInteractor &&) = delete;
 
   bool push(const T &item) { return ring_buffer_->push(item); }
+  bool pop(T &item) { return ring_buffer_->pop(item); }
 
 private:
   SharedMemory shm_;

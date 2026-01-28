@@ -31,7 +31,7 @@ int main() {
     std::cout << filepath << '\n';
   }
 
-  DataBentoProducer::Writer writer("test_shm");
+  DataBentoProducer::Interactor writer("test_shm");
   DataBentoProducer dataBentoProducer(filepaths, writer);
   dataBentoProducer.run();
   writer.unlink();

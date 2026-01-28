@@ -1,17 +1,19 @@
 #pragma once
 #include "Constants/Constants.h"
 #include "DataProducers/DataProducer.h"
-#include "SharedMemory/IPCWriter.h"
+#include "SharedMemory/IPCInteractor.h"
 #include <databento/historical.hpp>
 #include <string>
 #include <vector>
 
 class DataBentoProducer : public DataProducer {
 public:
-  using Writer = IPCWriter<databento::MboMsg, Constants::RING_BUFFER_SIZE>;
+  using Interactor =
+      IPCInteractor<databento::MboMsg, Constants::RING_BUFFER_SIZE>;
 
-  DataBentoProducer(const std::vector<std::string> filepaths, Writer &writer);
-  ~DataBentoProducer();
+  DataBentoProducer(const std::vector<std::string> filepaths,
+                    Interactor &writer);
+  ~DataBentoProducer() = default;
 
   DataBentoProducer(const DataBentoProducer &) = delete;
   DataBentoProducer &operator=(const DataBentoProducer &) = delete;
@@ -22,5 +24,5 @@ public:
 
 private:
   std::vector<std::string> mbo_filepaths_;
-  Writer &writer_;
+  Interactor &writer_;
 };

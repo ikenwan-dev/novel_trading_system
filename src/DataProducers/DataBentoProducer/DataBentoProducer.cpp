@@ -2,12 +2,10 @@
 #include <algorithm>
 
 DataBentoProducer::DataBentoProducer(const std::vector<std::string> filepaths,
-                                     Writer &writer)
+                                     Interactor &writer)
     : mbo_filepaths_(filepaths), writer_(writer) {
   std::sort(mbo_filepaths_.begin(), mbo_filepaths_.end());
 }
-
-DataBentoProducer::~DataBentoProducer() {}
 
 void DataBentoProducer::run() {
   for (const auto &filepath : mbo_filepaths_) {
