@@ -9,7 +9,6 @@ void DataBentoConsumer::consume() {
   long long num_messages = 0;
   while (true) {
     if (!reader_.pop(msg)) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(1));
       continue;
     }
 

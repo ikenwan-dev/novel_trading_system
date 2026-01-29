@@ -8,7 +8,7 @@
 
 std::vector<std::string> get_dbn_files(const std::string &directory) {
   std::vector<std::string> files;
-  const std::string suffix = ".mbo.dbn.zst";
+  const std::string suffix = ".mbo.dbn";
   for (const auto &entry : std::filesystem::directory_iterator(directory)) {
     if (entry.is_regular_file()) {
       std::string path = entry.path().string();
@@ -34,6 +34,6 @@ int main() {
   DataBentoProducer::Interactor writer("test_shm");
   DataBentoProducer dataBentoProducer(filepaths, writer);
   dataBentoProducer.produce();
-  writer.unlink();
+  // writer.unlink();
   return 0;
 }

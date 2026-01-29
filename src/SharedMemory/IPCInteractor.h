@@ -9,8 +9,13 @@ template <typename T, size_t Capacity> class IPCInteractor {
 
 public:
   IPCInteractor(const std::string &shm_name, const bool create = true)
-      : shm_(shm_name, sizeof(RingBuffer), create),
-        ring_buffer_(new(shm_.get_ptr()) RingBuffer()) {}
+      : shm_(shm_name, sizeof(RingBuffer), create) {
+    if (create) {
+      ring_buffer_ = new (shm_.get_ptr()) RingBuffer();
+    } else {
+      ring_buffer_ = static_cast<RingBuffer *>(shm_.get_ptr());
+    }
+  }
 
   ~IPCInteractor() {
     if (ring_buffer_) {
