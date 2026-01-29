@@ -7,7 +7,7 @@ DataBentoProducer::DataBentoProducer(const std::vector<std::string> filepaths,
   std::sort(mbo_filepaths_.begin(), mbo_filepaths_.end());
 }
 
-void DataBentoProducer::run() {
+void DataBentoProducer::produce() {
   for (const auto &filepath : mbo_filepaths_) {
     databento::DbnFileStore dbn_file_store(filepath);
     while (const databento::Record *record = dbn_file_store.NextRecord()) {

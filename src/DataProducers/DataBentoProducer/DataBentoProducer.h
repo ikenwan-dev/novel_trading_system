@@ -20,7 +20,7 @@ public:
   DataBentoProducer(DataBentoProducer &&) = delete;
   DataBentoProducer &operator=(DataBentoProducer &&) = delete;
 
-  void run() override;
+  void produce() override;
 
 private:
   std::vector<std::string> mbo_filepaths_;

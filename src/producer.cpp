@@ -33,7 +33,7 @@ int main() {
 
   DataBentoProducer::Interactor writer("test_shm");
   DataBentoProducer dataBentoProducer(filepaths, writer);
-  dataBentoProducer.run();
+  dataBentoProducer.produce();
   writer.unlink();
   return 0;
 }

@@ -2,7 +2,7 @@
 
 class DataProducer {
 public:
-  virtual void run() = 0;
+  virtual void produce() = 0;
   virtual ~DataProducer() = default;
 
   DataProducer(const DataProducer &) = delete;
