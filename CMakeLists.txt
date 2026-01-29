@@ -15,6 +15,8 @@ add_subdirectory(tests)
 
 add_executable(producer src/producer.cpp)
 target_link_libraries(producer PRIVATE DataProducer)
+add_executable(consumer src/consumer.cpp)
+target_link_libraries(consumer PRIVATE DataConsumer)
 add_executable(MainEventLoop src/main.cpp)
 
 target_link_libraries(MainEventLoop PRIVATE 
