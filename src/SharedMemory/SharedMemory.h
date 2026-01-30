@@ -30,11 +30,13 @@ public:
 
     if (create) {
       if (ftruncate(fd_, size_) == -1) {
+        unlink();
         throw std::runtime_error("Failed to set size of shared memory");
       }
     }
     ptr_ = mmap(nullptr, size_, PROT_READ | PROT_WRITE, MAP_SHARED, fd_, 0);
     if (ptr_ == MAP_FAILED) {
+      unlink();
       throw std::runtime_error("Failed to mmap shared memory");
     }
   }
