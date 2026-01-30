@@ -1,12 +1,10 @@
 #pragma once
-#include <chrono>
 #include <fcntl.h>
 #include <iostream>
 #include <stdexcept>
 #include <string>
 #include <sys/mman.h>
 #include <sys/types.h>
-#include <thread>
 #include <unistd.h>
 
 class SharedMemory {
