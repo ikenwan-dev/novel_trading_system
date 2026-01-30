@@ -14,7 +14,13 @@ template <typename T, size_t Capacity> class SharedRingBuffer {
                 "Capacity must be power of 2");
 
 public:
-  SharedRingBuffer() : head_(0), tail_(0) {}
+  SharedRingBuffer() : head_(0), tail_(0) {
+    magic_number.store(0xCAFEBABE, std::memory_order_release);
+  }
+
+  bool is_initialized() const {
+    return magic_number.load(std::memory_order_acquire) == 0xCAFEBABE;
+  }
 
   // --- Producer Side ---
   bool push(const T &item) {
@@ -54,4 +60,5 @@ private:
 
   // The data array
   std::array<T, Capacity> buffer;
+  std::atomic<uint32_t> magic_number;
 };

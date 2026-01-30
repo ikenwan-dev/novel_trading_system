@@ -1,9 +1,12 @@
 #pragma once
+#include <chrono>
 #include <fcntl.h>
+#include <iostream>
 #include <stdexcept>
 #include <string>
 #include <sys/mman.h>
 #include <sys/types.h>
+#include <thread>
 #include <unistd.h>
 
 class SharedMemory {
@@ -15,17 +18,23 @@ public:
     if (create)
       flags |= O_CREAT; // create flag
 
-    fd_ = shm_open(name_.c_str(), flags, 0666);
-    if (fd_ == -1) {
-      throw std::runtime_error("Failed to open shared memory: " + name_);
+    while (true) {
+      fd_ = shm_open(name_.c_str(), flags, 0666);
+      if (fd_ != -1) {
+        break;
+      }
+
+      if (create) {
+        throw std::runtime_error("Failed to open shared memory: " + name_);
+      }
     }
+    std::cout << "SHM opened: " << name_ << std::endl;
 
     if (create) {
       if (ftruncate(fd_, size_) == -1) {
         throw std::runtime_error("Failed to set size of shared memory");
       }
     }
-
     ptr_ = mmap(nullptr, size_, PROT_READ | PROT_WRITE, MAP_SHARED, fd_, 0);
     if (ptr_ == MAP_FAILED) {
       throw std::runtime_error("Failed to mmap shared memory");

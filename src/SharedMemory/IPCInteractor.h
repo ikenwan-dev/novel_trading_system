@@ -23,6 +23,8 @@ public:
     }
   }
 
+  bool is_initialized() const { return ring_buffer_->is_initialized(); }
+
   void unlink() {
     std::cout << "Unlinking shared memory...\n";
     shm_.unlink();
