@@ -11,11 +11,8 @@ void DataBentoConsumer::consume() {
     if (!reader_.pop(msg)) {
       continue;
     }
-
-    if (num_messages % 1000000 == 0) {
-      std::cout << "Num messages: " << num_messages << '\n';
-      std::cout << msg << '\n' << '\n';
-    }
+    // 1. this is where we will implement the logic to update the limit order
+    // book and strategy etc
     if (msg == end_msg) {
       break;
     }

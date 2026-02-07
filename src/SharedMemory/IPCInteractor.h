@@ -36,7 +36,10 @@ public:
   IPCInteractor(IPCInteractor &&) = delete;
   IPCInteractor &operator=(IPCInteractor &&) = delete;
 
+  // Push item into the ring buffer. Can only be called by the producer.
   bool push(const T &item) { return ring_buffer_->push(item); }
+
+  // Pop item from the ring buffer. Can only be called by the consumer.
   bool pop(T &item) { return ring_buffer_->pop(item); }
 
 private:
