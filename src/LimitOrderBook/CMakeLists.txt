@@ -1,3 +1,3 @@
-add_library(DataBentoLOB DataBentoLOB/DataBentoLOB.cpp)
-target_link_libraries(DataBentoLOB PUBLIC databento::databento)
-target_include_directories(DataBentoLOB PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..)
+add_library(LimitOrderBook DataBentoLOB/DataBentoLOB.cpp)
+target_link_libraries(LimitOrderBook PUBLIC databento::databento)
+target_include_directories(LimitOrderBook PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..)

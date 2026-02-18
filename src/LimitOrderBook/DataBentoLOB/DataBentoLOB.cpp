@@ -16,9 +16,16 @@ void DataBentoLOB::update_book(const databento::MboMsg &msg) {
              msg.action == databento::Action::Fill) {
     // do nothing
   } else {
-    throw std::runtime_error{std::string{"Unknown action"} +
-                             databento::ToString(msg.action)};
+    // throw std::runtime_error{std::string{"Unknown action"} +
+    //                          databento::ToString(msg.action)};
+    std::cout << "Unknown action: " << databento::ToString(msg.action) << "\n";
   }
+}
+
+std::pair<int64_t, int64_t> DataBentoLOB::get_bbo() const {
+  return std::make_pair(
+      bids_.empty() ? databento::kUndefPrice : bids_.rbegin()->first,
+      asks_.empty() ? databento::kUndefPrice : asks_.begin()->first);
 }
 
 void DataBentoLOB::add_order(const databento::MboMsg &msg) {

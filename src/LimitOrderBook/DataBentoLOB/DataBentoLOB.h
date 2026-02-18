@@ -5,11 +5,12 @@
 #include <databento/record.hpp>
 #include <map>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 class DataBentoLOB {
 public:
   void update_book(const databento::MboMsg &msg);
-
+  std::pair<int64_t, int64_t> get_bbo() const;
   // add some functions for retrieiving bbo, price, levels, possibly orders
   // ahead  etc
 

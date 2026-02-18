@@ -1,6 +1,7 @@
 #include "DataConsumers/DataBentoConsumer/DataBentoConsumer.h"
 
-DataBentoConsumer::DataBentoConsumer(Interactor &reader) : reader_(reader) {}
+DataBentoConsumer::DataBentoConsumer(Interactor &reader)
+    : reader_(reader), lob_() {}
 
 void DataBentoConsumer::consume() {
   std::cout << "Consuming...\n";
@@ -11,8 +12,11 @@ void DataBentoConsumer::consume() {
     if (!reader_.pop(msg)) {
       continue;
     }
-    // 1. this is where we will implement the logic to update the limit order
-    // book and strategy etc
+    lob_.update_book(msg);
+    // todo send message to market maker strategy
+
+    // update OMS
+
     if (msg == end_msg) {
       break;
     }
