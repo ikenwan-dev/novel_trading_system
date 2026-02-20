@@ -12,10 +12,16 @@ void DataBentoConsumer::consume() {
     if (!reader_.pop(msg)) {
       continue;
     }
-    lob_.update_book(msg);
-    // todo send message to market maker strategy
+    // proccess events in NetWorkSimulator that occured before current msg
+    // timestamp ie fills to the OMS, OMS Order creation to exchange sim,
+    // exchange sim Order ack/fill/cancel back to OMS
 
-    // update OMS
+    // run exchange simulator matching engine and push fills to network
+    // simulator
+
+    lob_.update_book(msg);
+
+    // run strategy and push order creations to netowrk simulator
 
     if (msg == end_msg) {
       break;

@@ -1,0 +1,3 @@
+add_library(OrderManagementSystem OrderManagementSystem.cpp)
+target_link_libraries(OrderManagementSystem PRIVATE databento::databento)
+target_include_directories(OrderManagementSystem PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..)
