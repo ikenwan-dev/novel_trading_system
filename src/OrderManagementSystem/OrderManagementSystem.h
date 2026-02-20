@@ -3,7 +3,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <databento/enums.hpp>
-#include <unordered_map>
 #include <vector>
 class OrderManagementSystem {
   using OrderID = uint64_t;
