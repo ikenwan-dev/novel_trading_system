@@ -21,6 +21,9 @@ public:
 };
 
 // MBO event definitions below
+//
+//
+//
 struct CreateOrderEvent {
   uint64_t order_id;
   int64_t price;
