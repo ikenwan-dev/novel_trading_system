@@ -4,6 +4,7 @@
 
 OrderManagementSystem::OrderManagementSystem(std::size_t max_orders)
     : max_orders_(max_orders) {
+  // Initialize orders vector
   orders_.resize(max_orders);
 }
 
