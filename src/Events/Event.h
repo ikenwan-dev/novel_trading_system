@@ -5,6 +5,8 @@
 #include <variant>
 #include <vector>
 
+
+namespace backtesting_engine {
 // Enum for all event subtypes. This will be used for easy and readible checking
 // of event types
 enum class EventType { Market, Signal, Order, Fill };
@@ -66,3 +68,4 @@ struct EventCompare {
 // Define the discrete event queue
 using EventQueue =
     std::priority_queue<EventV2, std::vector<EventV2>, EventCompare>;
+} // namespace backtesting_engine

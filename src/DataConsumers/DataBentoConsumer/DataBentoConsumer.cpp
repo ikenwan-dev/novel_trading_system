@@ -1,5 +1,7 @@
 #include "DataConsumers/DataBentoConsumer/DataBentoConsumer.h"
 
+
+namespace backtesting_engine {
 DataBentoConsumer::DataBentoConsumer(Interactor &reader)
     : reader_(reader), lob_() {}
 
@@ -29,3 +31,4 @@ void DataBentoConsumer::consume() {
     num_messages++;
   }
 }
+} // namespace backtesting_engine

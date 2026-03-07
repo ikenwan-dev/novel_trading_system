@@ -6,6 +6,8 @@
 #include <stdexcept>
 #include <string>
 
+
+namespace backtesting_engine {
 std::chrono::system_clock::time_point
 HistoricCSVDataHandler::parse_stooq_datetime(const std::string &dateStr,
                                              const std::string &timeStr) {
@@ -142,3 +144,4 @@ HistoricCSVDataHandler::get_latest_price_info(const std::string &ticker) const {
   }
   return all_data_.at(ticker)[it->second];
 }
+} // namespace backtesting_engine

@@ -7,6 +7,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+
+namespace backtesting_engine {
 class SharedMemory {
 public:
   SharedMemory(const std::string &name, size_t size, bool create = true)
@@ -65,3 +67,4 @@ private:
   void *ptr_;
   bool created_;
 };
+} // namespace backtesting_engine

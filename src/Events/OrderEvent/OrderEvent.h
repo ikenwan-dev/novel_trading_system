@@ -5,6 +5,8 @@
 #include <optional>
 #include <string>
 
+
+namespace backtesting_engine {
 enum class OrderDirection { BUY, SELL };
 inline std::ostream &operator<<(std::ostream &os, OrderDirection od) {
   switch (od) {
@@ -52,3 +54,4 @@ public:
   const OrderDirection direction_;
   const std::optional<double> limit_price_;
 };
+} // namespace backtesting_engine

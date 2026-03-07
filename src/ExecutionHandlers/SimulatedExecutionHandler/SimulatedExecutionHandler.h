@@ -5,6 +5,8 @@
 #include "ThreadSafeQueue/ThreadSafeQueue.h"
 #include <memory>
 
+
+namespace backtesting_engine {
 class SimulatedExecutionHandler : public ExecutionHandler {
 public:
   SimulatedExecutionHandler(
@@ -22,3 +24,4 @@ private:
   ThreadSafeQueue<std::shared_ptr<Event>> &event_queue_;
   DataHandler &data_handler_;
 };
+} // namespace backtesting_engine

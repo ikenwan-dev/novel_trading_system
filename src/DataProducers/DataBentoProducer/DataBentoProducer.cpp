@@ -1,6 +1,8 @@
 #include "DataProducers/DataBentoProducer/DataBentoProducer.h"
 #include <algorithm>
 
+
+namespace backtesting_engine {
 DataBentoProducer::DataBentoProducer(const std::vector<std::string> filepaths,
                                      Interactor &writer)
     : mbo_filepaths_(filepaths), writer_(writer) {
@@ -19,3 +21,4 @@ void DataBentoProducer::produce() {
   }
   writer_.push(databento::MboMsg{}); // signal end of data
 }
+} // namespace backtesting_engine

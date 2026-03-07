@@ -2,6 +2,8 @@
 #include "Events/FillEvent/FillEvent.h"
 #include <algorithm>
 
+
+namespace backtesting_engine {
 class TransactionCostModel {
 public:
   virtual ~TransactionCostModel() = default;
@@ -36,3 +38,4 @@ private:
   const double commission_per_share_;
   const double min_commission_;
 };
+} // namespace backtesting_engine

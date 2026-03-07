@@ -7,6 +7,8 @@
 #include <unordered_map>
 #include <vector>
 
+
+namespace backtesting_engine {
 class HistoricCSVDataHandler : public DataHandler {
 public:
   HistoricCSVDataHandler(
@@ -36,3 +38,5 @@ private:
   static std::chrono::system_clock::time_point
   parse_stooq_datetime(const std::string &dateStr, const std::string &timeStr);
 };
+
+} // namespace backtesting_engine

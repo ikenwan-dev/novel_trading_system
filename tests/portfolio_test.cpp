@@ -3,6 +3,8 @@
 #include "Portfolio/Portfolio.h"
 #include "gtest/gtest.h"
 
+using namespace backtesting_engine;
+
 class MockDataHandler : public DataHandler {
   void update() override {}
   bool is_running() const override { return false; }

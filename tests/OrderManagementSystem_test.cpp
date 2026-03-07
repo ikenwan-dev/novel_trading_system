@@ -1,6 +1,9 @@
 #include "OrderManagementSystem/OrderManagementSystem.h"
 #include <gtest/gtest.h>
 
+
+using namespace backtesting_engine;
+
 class OrderManagementSystemTest : public ::testing::Test {
 protected:
   OrderManagementSystem oms;

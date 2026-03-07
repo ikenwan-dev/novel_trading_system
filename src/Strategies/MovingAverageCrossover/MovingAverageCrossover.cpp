@@ -1,6 +1,8 @@
 #include "MovingAverageCrossover.h"
 #include "Events/SignalEvent/SignalEvent.h"
 #include <numeric>
+
+namespace backtesting_engine {
 MovingAverageCrossover::MovingAverageCrossover(
     ThreadSafeQueue<std::shared_ptr<Event>> &event_queue,
     const std::vector<std::string> &tickers, int short_window, int long_window)
@@ -56,3 +58,5 @@ void MovingAverageCrossover::on_market_data(const MarketEvent &event) {
         event.ticker_, event.timestamp_, SignalDirection::SHORT));
   }
 }
+
+} // namespace backtesting_engine

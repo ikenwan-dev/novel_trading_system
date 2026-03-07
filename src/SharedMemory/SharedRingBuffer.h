@@ -2,6 +2,8 @@
 #include <atomic>
 #include <new>
 
+
+namespace backtesting_engine {
 // Use 64 bytes for cache line alignment (standard for x86 and Apple Silicon)
 #if __cpp_lib_hardware_interference_size
 using std::hardware_destructive_interference_size;
@@ -62,3 +64,4 @@ private:
   std::array<T, Capacity> buffer;
   std::atomic<uint32_t> magic_number;
 };
+} // namespace backtesting_engine

@@ -2,6 +2,8 @@
 #include <cstdint>
 #include <stdexcept>
 
+
+namespace backtesting_engine {
 OrderManagementSystem::OrderManagementSystem(std::size_t max_orders)
     : max_orders_(max_orders) {
   // Initialize orders vector
@@ -82,3 +84,5 @@ OrderManagementSystem::get_order(OrderID order_id) const {
   }
   return orders_[order_id];
 }
+
+} // namespace backtesting_engine

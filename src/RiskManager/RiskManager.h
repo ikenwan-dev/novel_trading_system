@@ -5,6 +5,8 @@
 #include "Portfolio/Portfolio.h"
 #include "ThreadSafeQueue/ThreadSafeQueue.h"
 #include <memory>
+
+namespace backtesting_engine {
 class RiskManager {
 public:
   RiskManager(Portfolio &portfolio,
@@ -17,3 +19,4 @@ private:
   Portfolio &portfolio_;
   ThreadSafeQueue<std::shared_ptr<Event>> &queue_;
 };
+} // namespace backtesting_engine

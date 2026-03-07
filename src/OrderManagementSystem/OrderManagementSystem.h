@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <databento/enums.hpp>
 #include <vector>
+
+namespace backtesting_engine {
 class OrderManagementSystem {
   using OrderID = uint64_t;
 
@@ -43,3 +45,4 @@ private:
 
   // TODO: add reference to network simulator once implemented
 };
+} // namespace backtesting_engine

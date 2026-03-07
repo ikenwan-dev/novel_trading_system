@@ -1,5 +1,7 @@
 #pragma once
 
+
+namespace backtesting_engine {
 class DataConsumer {
 public:
   virtual void consume() = 0;
@@ -13,3 +15,4 @@ public:
 protected:
   DataConsumer() = default;
 };
+} // namespace backtesting_engine

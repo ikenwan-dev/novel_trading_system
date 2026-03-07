@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+
+namespace backtesting_engine {
 class DataBentoProducer : public DataProducer {
 public:
   using Interactor =
@@ -26,3 +28,4 @@ private:
   std::vector<std::string> mbo_filepaths_;
   Interactor &writer_;
 };
+} // namespace backtesting_engine

@@ -16,6 +16,8 @@
 #include <ranges>
 #include <string>
 
+using namespace backtesting_engine;
+
 StrategyConfig load_config_from_file(const std::string &filepath) {
   StrategyConfig sc;
   auto ec = glz::read_file_json(sc, filepath, std::string{});

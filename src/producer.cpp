@@ -6,6 +6,8 @@
 #include <filesystem>
 #include <iostream>
 
+using namespace backtesting_engine;
+
 std::vector<std::string> get_dbn_files(const std::string &directory) {
   std::vector<std::string> files;
   const std::string suffix = ".mbo.dbn";

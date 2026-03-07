@@ -1,5 +1,7 @@
 #include <map>
 #include <string>
+
+namespace backtesting_engine {
 struct StrategyConfig {
   std::string name; // Strategy name
 
@@ -7,3 +9,4 @@ struct StrategyConfig {
   std::map<std::string, double> params;
   std::map<std::string, std::string> ticker_map;
 };
+} // namespace backtesting_engine

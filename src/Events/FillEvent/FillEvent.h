@@ -5,6 +5,8 @@
 #include <chrono>
 #include <string>
 
+
+namespace backtesting_engine {
 class FillEvent : public Event {
 public:
   FillEvent(std::string ticker, std::chrono::system_clock::time_point timestamp,
@@ -23,3 +25,5 @@ public:
   const double fill_price_;
   const double commision_;
 };
+
+} // namespace backtesting_engine

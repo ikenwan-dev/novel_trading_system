@@ -4,6 +4,8 @@
 #include <mutex>
 #include <queue>
 
+
+namespace backtesting_engine {
 // TODO: Test if lockless queue is faster
 // ThreadSafeQueue is a thread-safe implementation of a queue
 template <typename T> class ThreadSafeQueue {
@@ -40,3 +42,4 @@ private:
   std::mutex mutex_;
   std::condition_variable cond_var_;
 };
+} // namespace backtesting_engine

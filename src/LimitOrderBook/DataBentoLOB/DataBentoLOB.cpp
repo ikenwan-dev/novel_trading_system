@@ -3,6 +3,8 @@
 #include "databento/record.hpp"
 #include <algorithm>
 
+
+namespace backtesting_engine {
 void DataBentoLOB::update_book(const databento::MboMsg &msg) {
   if (msg.action == databento::Action::Add) {
     add_order(msg);
@@ -136,3 +138,4 @@ DataBentoLOB::get_order_message(uint64_t order_id, PriceLevel &level) {
   }
   return level_order_it;
 }
+} // namespace backtesting_engine

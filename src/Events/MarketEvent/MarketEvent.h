@@ -3,6 +3,8 @@
 #include <chrono>
 #include <string>
 
+
+namespace backtesting_engine {
 class MarketEvent : public Event {
 public:
   MarketEvent(std::string ticker,
@@ -21,3 +23,4 @@ public:
   const double low_;
   const int volume_;
 };
+} // namespace backtesting_engine

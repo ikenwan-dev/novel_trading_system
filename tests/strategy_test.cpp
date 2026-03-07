@@ -1,6 +1,8 @@
 #include "Events/SignalEvent/SignalEvent.h"
 #include "Strategies/MovingAverageCrossover/MovingAverageCrossover.h"
 #include "gtest/gtest.h"
+
+using namespace backtesting_engine;
 #include <chrono>
 #include <memory>
 

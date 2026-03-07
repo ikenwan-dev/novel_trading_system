@@ -4,6 +4,8 @@
 #include <iostream>
 #include <memory>
 
+
+namespace backtesting_engine {
 void RiskManager::on_signal(const SignalEvent &signal_event) {
   // TODO: dont use fixed position sizing and instead do 1-2% based on account
   // value
@@ -38,3 +40,4 @@ void RiskManager::on_signal(const SignalEvent &signal_event) {
                                            signal_event.timestamp_,
                                            position_size, order_direction));
 }
+} // namespace backtesting_engine

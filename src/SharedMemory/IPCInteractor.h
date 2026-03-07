@@ -4,6 +4,8 @@
 #include <iostream>
 #include <string>
 
+
+namespace backtesting_engine {
 template <typename T, size_t Capacity> class IPCInteractor {
   using RingBuffer = SharedRingBuffer<T, Capacity>;
 
@@ -46,3 +48,5 @@ private:
   SharedMemory shm_;
   RingBuffer *ring_buffer_;
 };
+
+} // namespace backtesting_engine

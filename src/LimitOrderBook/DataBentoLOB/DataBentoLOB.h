@@ -7,6 +7,8 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
+namespace backtesting_engine {
 class DataBentoLOB {
 public:
   void update_book(const databento::MboMsg &msg);
@@ -38,3 +40,4 @@ private:
   Order &get_order(uint64_t order_id);
   PriceLevel::iterator get_order_message(uint64_t order_id, PriceLevel &level);
 };
+} // namespace backtesting_engine

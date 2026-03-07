@@ -6,6 +6,8 @@
 #include "SharedMemory/IPCInteractor.h"
 #include <databento/historical.hpp>
 
+
+namespace backtesting_engine {
 class DataBentoConsumer : public DataConsumer {
 public:
   using Interactor =
@@ -25,3 +27,4 @@ private:
   Interactor &reader_;
   DataBentoLOB lob_;
 };
+} // namespace backtesting_engine

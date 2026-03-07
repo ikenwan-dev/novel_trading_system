@@ -3,6 +3,9 @@
 #include "LimitOrderBook/DataBentoLOB/DataBentoLOB.h"
 #include "SharedMemory/IPCInteractor.h"
 #include "databento/record.hpp"
+
+using namespace backtesting_engine;
+
 using Interactor =
     IPCInteractor<databento::MboMsg, Constants::RING_BUFFER_SIZE>;
 

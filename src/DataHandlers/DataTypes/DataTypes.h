@@ -3,6 +3,8 @@
 #include <chrono>
 #include <string>
 
+
+namespace backtesting_engine {
 struct Bar {
   std::string symbol;
   std::chrono::system_clock::time_point timestamp;
@@ -14,3 +16,4 @@ struct Bar {
   // This allows std::sort to work
   bool operator<(const Bar &other) const { return timestamp < other.timestamp; }
 };
+} // namespace backtesting_engine

@@ -1,6 +1,9 @@
 #include "LimitOrderBook/DataBentoLOB/DataBentoLOB.h"
 #include <gtest/gtest.h>
 
+
+using namespace backtesting_engine;
+
 class DataBentoLOBTest : public ::testing::Test {
 protected:
   DataBentoLOB lob;
