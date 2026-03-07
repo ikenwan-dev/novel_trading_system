@@ -15,11 +15,11 @@ add_subdirectory(tests)
 
 add_executable(producer src/producer.cpp)
 target_link_libraries(producer PRIVATE DataProducer)
-add_executable(consumer src/consumer.cpp)
-target_link_libraries(consumer PRIVATE DataConsumer Events)
-add_executable(MainEventLoop src/main.cpp)
+add_executable(MainMboEventLoop src/consumer.cpp)
+target_link_libraries(MainMboEventLoop PRIVATE DataConsumer Events NetworkSimulator)
+add_executable(MainBarEventLoop src/main.cpp)
 
-target_link_libraries(MainEventLoop PRIVATE 
+target_link_libraries(MainBarEventLoop PRIVATE 
     Strategies
     Statistics
     ExecutionHandlers
@@ -30,5 +30,6 @@ target_link_libraries(MainEventLoop PRIVATE
     ThreadSafeQueue
     glaze::glaze
 )
-target_compile_definitions(MainEventLoop PRIVATE PROJECT_ROOT="${CMAKE_CURRENT_SOURCE_DIR}")
+target_compile_definitions(MainBarEventLoop PRIVATE PROJECT_ROOT="${CMAKE_CURRENT_SOURCE_DIR}")
 target_compile_definitions(producer PRIVATE PROJECT_ROOT="${CMAKE_CURRENT_SOURCE_DIR}")
+target_compile_definitions(MainMboEventLoop PRIVATE PROJECT_ROOT="${CMAKE_CURRENT_SOURCE_DIR}")

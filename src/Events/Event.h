@@ -5,7 +5,6 @@
 #include <variant>
 #include <vector>
 
-
 namespace backtesting_engine {
 // Enum for all event subtypes. This will be used for easy and readible checking
 // of event types

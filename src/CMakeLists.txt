@@ -12,4 +12,6 @@ add_subdirectory(DataConsumers)
 add_subdirectory(LimitOrderBook)
 add_subdirectory(Constants)
 add_subdirectory(OrderManagementSystem)
+add_subdirectory(NetworkSimulator)
+
 
