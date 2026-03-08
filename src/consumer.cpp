@@ -3,7 +3,10 @@
 #include "LimitOrderBook/DataBentoLOB/DataBentoLOB.h"
 #include "NetworkSimulator/NetworkSimulator.h"
 #include "SharedMemory/IPCInteractor.h"
+#include "databento/enums.hpp"
+#include <algorithm>
 #include <databento/record.hpp>
+#include <map>
 
 using namespace backtesting_engine;
 
@@ -33,19 +36,56 @@ int main() {
   NetworkSimulator simulator(queue, Constants::OUTBOUND_LATENCY,
                              Constants::INBOUND_LATENCY);
   long long num_messages = 0;
-  std::cout << "Consuming..." << std::endl;
+  std::cout << "Consuming...." << std::endl;
   auto start = std::chrono::high_resolution_clock::now();
-  while (has_more_messages || queue.size() > 0) {
-  }
-  // while (true) {
-  //   get_next_msg(reader, msg);
-
-  //   if (msg == end_msg) {
-  //     break;
-  //   }
-  //   lob_.update_book(msg);
-  //   num_messages++;
+  // while (has_more_messages || queue.size() > 0) {
   // }
+
+  ////// test code start
+  std::vector<databento::MboMsg> trade_messages;
+  std::vector<databento::MboMsg> fill_messages;
+  std::map<uint64_t, long long> message_counts;
+  std::unordered_map<databento::Action, long long> action_counts;
+  databento::MboMsg last_msg;
+  long long num_trades = 0;
+  long long num_fills = 0;
+  long long out_of_order_trades = 0;
+  while (true) {
+    get_next_msg(reader, msg);
+
+    if (msg == end_msg) {
+      break;
+    }
+    action_counts[msg.action]++;
+    // if (msg.order_id) {
+    //   message_counts[msg.order_id]++;
+    // }
+    // if (msg.action == databento::action::Fill && num_fills < 10) {
+    //   fill_messages.push_back(msg);
+    //   num_fills++;
+    // } else if (msg.action == databento::action::Trade && num_trades < 10) {
+    //   trade_messages.push_back(msg);
+    //   num_trades++;
+    // }
+    // lob_.update_book(msg);
+    num_messages++;
+  }
+  auto max_it = std::max_element(
+      message_counts.begin(), message_counts.end(),
+      [](const auto &a, const auto &b) { return a.second < b.second; });
+
+  for (const auto &action : action_counts) {
+    std::cout << action.first << " : " << action.second << std::endl;
+  }
+  // std::cout << "order with most messages: " << max_it->first << " with "
+  //           << max_it->second << " messages" << std::endl;
+  // for (const auto &trade : trade_messages) {
+  //   std::cout << trade << std::endl;
+  // }
+  // for (const auto &fill : fill_messages) {
+  //   std::cout << fill << std::endl;
+  // }
+  ////// test code end
   auto end = std::chrono::high_resolution_clock::now();
   std::cout << "Consumed " << num_messages << " messages" << std::endl;
   std::chrono::duration<double> diff = end - start;

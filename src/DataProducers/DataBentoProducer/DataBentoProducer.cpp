@@ -1,7 +1,6 @@
 #include "DataProducers/DataBentoProducer/DataBentoProducer.h"
 #include <algorithm>
 
-
 namespace backtesting_engine {
 DataBentoProducer::DataBentoProducer(const std::vector<std::string> filepaths,
                                      Interactor &writer)
@@ -12,6 +11,7 @@ DataBentoProducer::DataBentoProducer(const std::vector<std::string> filepaths,
 void DataBentoProducer::produce() {
   std::cout << "Producing...\n";
   for (const auto &filepath : mbo_filepaths_) {
+    std::cout << "Producing from " << filepath << "\n";
     databento::DbnFileStore dbn_file_store(filepath);
     while (const databento::Record *record = dbn_file_store.NextRecord()) {
       const auto &mbo_msg = record->Get<databento::MboMsg>();

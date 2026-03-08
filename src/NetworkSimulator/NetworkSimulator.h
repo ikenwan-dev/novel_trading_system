@@ -10,7 +10,8 @@ public:
         inbound_latency(inbound_latency) {}
 
   // Rule of 5: Delete default copy/move semantics because this is a unique
-  // engine component
+  // engine component. The reference to the event queue prevents auto generated
+  // assignment operators
   NetworkSimulator(const NetworkSimulator &) = delete;
   NetworkSimulator &operator=(const NetworkSimulator &) = delete;
   NetworkSimulator(NetworkSimulator &&) = delete;
