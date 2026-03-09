@@ -1,7 +1,6 @@
 #include "LimitOrderBook/DataBentoLOB/DataBentoLOB.h"
 #include <gtest/gtest.h>
 
-
 using namespace backtesting_engine;
 
 class DataBentoLOBTest : public ::testing::Test {
@@ -133,4 +132,61 @@ TEST_F(DataBentoLOBTest, ClearBook) {
   auto bbo = lob.get_bbo();
   EXPECT_EQ(bbo.first, databento::kUndefPrice);
   EXPECT_EQ(bbo.second, databento::kUndefPrice);
+}
+
+TEST_F(DataBentoLOBTest, AddOrderQuantity) {
+  lob.update_book(create_msg(1, 100 * databento::kFixedPriceScale, 15,
+                             databento::Action::Add, databento::Side::Bid));
+  EXPECT_EQ(lob.get_level_qty(databento::Side::Bid,
+                              100 * databento::kFixedPriceScale),
+            15);
+
+  lob.update_book(create_msg(2, 100 * databento::kFixedPriceScale, 20,
+                             databento::Action::Add, databento::Side::Bid));
+  EXPECT_EQ(lob.get_level_qty(databento::Side::Bid,
+                              100 * databento::kFixedPriceScale),
+            35);
+}
+
+TEST_F(DataBentoLOBTest, CancelOrderQuantity) {
+  lob.update_book(create_msg(1, 100 * databento::kFixedPriceScale, 15,
+                             databento::Action::Add, databento::Side::Bid));
+  lob.update_book(create_msg(1, 100 * databento::kFixedPriceScale, 15,
+                             databento::Action::Cancel, databento::Side::Bid));
+  EXPECT_EQ(lob.get_level_qty(databento::Side::Bid,
+                              100 * databento::kFixedPriceScale),
+            0);
+}
+
+TEST_F(DataBentoLOBTest, ModifyOrderDecreaseQuantity) {
+  lob.update_book(create_msg(1, 100 * databento::kFixedPriceScale, 20,
+                             databento::Action::Add, databento::Side::Bid));
+  lob.update_book(create_msg(1, 100 * databento::kFixedPriceScale, 8,
+                             databento::Action::Modify, databento::Side::Bid));
+  EXPECT_EQ(lob.get_level_qty(databento::Side::Bid,
+                              100 * databento::kFixedPriceScale),
+            8);
+}
+
+TEST_F(DataBentoLOBTest, ModifyOrderIncreaseQuantity) {
+  lob.update_book(create_msg(1, 100 * databento::kFixedPriceScale, 20,
+                             databento::Action::Add, databento::Side::Bid));
+  lob.update_book(create_msg(1, 100 * databento::kFixedPriceScale, 30,
+                             databento::Action::Modify, databento::Side::Bid));
+  EXPECT_EQ(lob.get_level_qty(databento::Side::Bid,
+                              100 * databento::kFixedPriceScale),
+            30);
+}
+
+TEST_F(DataBentoLOBTest, ModifyOrderPriceChange) {
+  lob.update_book(create_msg(1, 100 * databento::kFixedPriceScale, 20,
+                             databento::Action::Add, databento::Side::Bid));
+  lob.update_book(create_msg(1, 105 * databento::kFixedPriceScale, 20,
+                             databento::Action::Modify, databento::Side::Bid));
+  EXPECT_EQ(lob.get_level_qty(databento::Side::Bid,
+                              100 * databento::kFixedPriceScale),
+            0);
+  EXPECT_EQ(lob.get_level_qty(databento::Side::Bid,
+                              105 * databento::kFixedPriceScale),
+            20);
 }

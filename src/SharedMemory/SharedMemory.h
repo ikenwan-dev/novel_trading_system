@@ -4,10 +4,9 @@
 #include <stdexcept>
 #include <string>
 #include <sys/mman.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-
-
 namespace backtesting_engine {
 class SharedMemory {
 public:
@@ -21,6 +20,17 @@ public:
     while (true) {
       fd_ = shm_open(name_.c_str(), flags, 0666);
       if (fd_ != -1) {
+        if (!create) {
+          // Check if producer thread has called ftruncate to prevent race
+          // condition of consumer calling mmap before producer calls ftruncate
+          struct stat statbuf;
+          if (fstat(fd_, &statbuf) == 0 && statbuf.st_size >= size_) {
+            break;
+          }
+          close(fd_);
+          usleep(100);
+          continue;
+        }
         break;
       }
 
@@ -39,7 +49,9 @@ public:
     ptr_ = mmap(nullptr, size_, PROT_READ | PROT_WRITE, MAP_SHARED, fd_, 0);
     if (ptr_ == MAP_FAILED) {
       unlink();
-      throw std::runtime_error("Failed to mmap shared memory");
+      throw std::runtime_error("Failed to mmap shared memory (" +
+                               std::to_string(errno) +
+                               "): " + std::string(strerror(errno)));
     }
   }
 

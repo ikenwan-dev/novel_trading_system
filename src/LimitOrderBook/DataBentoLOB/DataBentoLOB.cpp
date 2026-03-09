@@ -3,7 +3,6 @@
 #include "databento/record.hpp"
 #include <algorithm>
 
-
 namespace backtesting_engine {
 void DataBentoLOB::update_book(const databento::MboMsg &msg) {
   if (msg.action == databento::Action::Add) {
@@ -30,22 +29,33 @@ std::pair<int64_t, int64_t> DataBentoLOB::get_bbo() const {
       asks_.empty() ? databento::kUndefPrice : asks_.begin()->first);
 }
 
+uint32_t DataBentoLOB::get_level_qty(databento::Side side,
+                                     int64_t price) const {
+  const auto &levels = get_side(side);
+  auto it = levels.find(price);
+  if (it != levels.end()) {
+    return it->second.total_qty;
+  }
+  return 0; // Price level does not exist
+}
+
 void DataBentoLOB::add_order(const databento::MboMsg &msg) {
   if (orders_.find(msg.order_id) != orders_.end()) {
     throw std::runtime_error{"Order already exists"};
   }
+  PriceLevels &levels = get_side(msg.side);
   if (msg.flags.IsTob()) {
-    PriceLevels &levels = get_side(msg.side);
     levels.clear();
     // kUndefPrice indicates the side's book should be cleared
     // and doesn't represent an order that should be added
     if (msg.price != databento::kUndefPrice) {
-      PriceLevel level = {msg};
+      PriceLevel level = {msg.size, {msg}};
       levels.emplace(msg.price, level);
     }
   } else {
     orders_.emplace(msg.order_id, Order{msg.price, msg.side});
-    get_side(msg.side)[msg.price].push_back(msg);
+    levels[msg.price].messages.push_back(msg);
+    levels[msg.price].total_qty += msg.size;
   }
 }
 
@@ -61,16 +71,22 @@ void DataBentoLOB::modify_order(const databento::MboMsg &msg) {
   auto level_order_it = get_order_message(order_it->first, level);
 
   if (order_it->second.price != msg.price) {
-    level.erase(level_order_it);
-    if (level.empty()) {
+    level.total_qty -= level_order_it->size;
+    level.messages.erase(level_order_it);
+
+    if (level.messages.empty()) {
       levels.erase(order_it->second.price);
     }
     order_it->second.price = msg.price;
-    levels[msg.price].push_back(msg);
+    levels[msg.price].messages.push_back(msg);
+    levels[msg.price].total_qty += msg.size;
   } else if (level_order_it->size < msg.size) {
-    level.erase(level_order_it);
-    level.push_back(msg);
+    level.total_qty -= level_order_it->size;
+    level.messages.erase(level_order_it);
+    level.messages.push_back(msg);
+    level.total_qty += msg.size;
   } else {
+    level.total_qty -= (level_order_it->size - msg.size);
     level_order_it->size = msg.size;
   }
   return;
@@ -86,11 +102,12 @@ void DataBentoLOB::cancel_order(const databento::MboMsg &msg) {
   auto level_order_it = get_order_message(order_it->first, level);
 
   level_order_it->size -= msg.size;
+  level.total_qty -= msg.size;
   if (level_order_it->size == 0) {
     const int64_t price = order_it->second.price;
     orders_.erase(order_it);
-    level.erase(level_order_it);
-    if (level.empty()) {
+    level.messages.erase(level_order_it);
+    if (level.messages.empty()) {
       levels.erase(price);
     }
   }
@@ -102,6 +119,16 @@ void DataBentoLOB::clear_book() {
 }
 
 DataBentoLOB::PriceLevels &DataBentoLOB::get_side(databento::Side side) {
+  if (side == databento::Side::Bid) {
+    return bids_;
+  } else {
+    return asks_;
+  }
+}
+
+// const version of get_side
+const DataBentoLOB::PriceLevels &
+DataBentoLOB::get_side(databento::Side side) const {
   if (side == databento::Side::Bid) {
     return bids_;
   } else {
@@ -127,12 +154,12 @@ DataBentoLOB::Order &DataBentoLOB::get_order(uint64_t order_id) {
   return order_it->second;
 }
 
-DataBentoLOB::PriceLevel::iterator
+std::vector<databento::MboMsg>::iterator
 DataBentoLOB::get_order_message(uint64_t order_id, PriceLevel &level) {
   auto level_order_it = std::find_if(
-      level.begin(), level.end(),
+      level.messages.begin(), level.messages.end(),
       [order_id](databento::MboMsg msg) { return msg.order_id == order_id; });
-  if (level_order_it == level.end()) {
+  if (level_order_it == level.messages.end()) {
     throw std::runtime_error{
         "Order does not exist in level"}; // Or handle appropriately
   }

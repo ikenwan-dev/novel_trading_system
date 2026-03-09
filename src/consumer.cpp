@@ -36,11 +36,6 @@ int main() {
   NetworkSimulator simulator(queue, Constants::OUTBOUND_LATENCY,
                              Constants::INBOUND_LATENCY);
   long long num_messages = 0;
-  std::cout << "Consuming...." << std::endl;
-  auto start = std::chrono::high_resolution_clock::now();
-  // while (has_more_messages || queue.size() > 0) {
-  // }
-
   ////// test code start
   std::vector<databento::MboMsg> trade_messages;
   std::vector<databento::MboMsg> fill_messages;
@@ -50,6 +45,8 @@ int main() {
   long long num_trades = 0;
   long long num_fills = 0;
   long long out_of_order_trades = 0;
+  std::cout << "Consuming...." << std::endl;
+  auto start = std::chrono::high_resolution_clock::now();
   while (true) {
     get_next_msg(reader, msg);
 
@@ -67,9 +64,10 @@ int main() {
     //   trade_messages.push_back(msg);
     //   num_trades++;
     // }
-    // lob_.update_book(msg);
+    lob_.update_book(msg);
     num_messages++;
   }
+  auto end = std::chrono::high_resolution_clock::now();
   auto max_it = std::max_element(
       message_counts.begin(), message_counts.end(),
       [](const auto &a, const auto &b) { return a.second < b.second; });
@@ -86,7 +84,9 @@ int main() {
   //   std::cout << fill << std::endl;
   // }
   ////// test code end
-  auto end = std::chrono::high_resolution_clock::now();
+
+  std::cout << "lob bbo: " << lob_.get_bbo().first << " @ "
+            << lob_.get_bbo().second << std::endl;
   std::cout << "Consumed " << num_messages << " messages" << std::endl;
   std::chrono::duration<double> diff = end - start;
   double seconds = diff.count();
