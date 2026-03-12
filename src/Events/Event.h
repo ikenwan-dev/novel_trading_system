@@ -29,7 +29,7 @@ struct CreateOrderEvent {
   uint64_t order_id;
   int64_t price;
   uint64_t qty;
-  databento::Side side;
+  databento::Side side; // todo: remove dependency on databento
 };
 
 struct AckOrderEvent {
