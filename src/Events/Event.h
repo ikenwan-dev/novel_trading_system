@@ -32,7 +32,7 @@ struct CreateOrderEvent {
   databento::Side side; // todo: remove dependency on databento
 };
 
-struct AckOrderEvent {
+struct AckCreateOrderEvent {
   uint64_t order_id;
 };
 
@@ -42,17 +42,23 @@ struct CancelOrderEvent {
   uint64_t order_id;
 };
 
-struct FillOrderEvent {
+struct AckCancelOrderEvent {
+  uint64_t order_id;
+};
+
+struct AckFillOrderEvent {
   uint64_t order_id;
   uint64_t filled_qty;
   // int64_t price;
 };
 
-using EventPayload = std::variant<CreateOrderEvent, AckOrderEvent,
-                                  CancelOrderEvent, FillOrderEvent>;
+using EventPayload =
+    std::variant<CreateOrderEvent, AckCreateOrderEvent, CancelOrderEvent,
+                 AckCancelOrderEvent, AckFillOrderEvent>;
 
 struct EventV2 {
-  uint64_t timestamp_ns; // The exact time this event occurs
+  uint64_t timestamp_ns; // The exact time this event occurs(nanoseconds since
+                         // unix epoch)
   EventPayload payload;  // The actual event data
 };
 

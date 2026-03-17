@@ -13,7 +13,7 @@ class DataBentoLOB {
 public:
   void update_book(const databento::MboMsg &msg);
   std::pair<int64_t, int64_t> get_bbo() const;
-  uint32_t get_level_qty(databento::Side side, int64_t price) const;
+  uint64_t get_level_qty(databento::Side side, int64_t price) const;
   // add some functions for retrieiving bbo, price, levels, possibly orders
   // ahead  etc
 
@@ -23,7 +23,7 @@ private:
     databento::Side side;
   };
   struct PriceLevel {
-    uint32_t total_qty = 0;
+    uint64_t total_qty = 0;
     std::vector<databento::MboMsg> messages;
   };
   using Orders = std::unordered_map<uint64_t, Order>; // map of order_id to

@@ -29,7 +29,7 @@ std::pair<int64_t, int64_t> DataBentoLOB::get_bbo() const {
       asks_.empty() ? databento::kUndefPrice : asks_.begin()->first);
 }
 
-uint32_t DataBentoLOB::get_level_qty(databento::Side side,
+uint64_t DataBentoLOB::get_level_qty(databento::Side side,
                                      int64_t price) const {
   const auto &levels = get_side(side);
   auto it = levels.find(price);
