@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <cstring>
 namespace backtesting_engine {
 class SharedMemory {
 public:
@@ -51,7 +52,7 @@ public:
       unlink();
       throw std::runtime_error("Failed to mmap shared memory (" +
                                std::to_string(errno) +
-                               "): " + std::string(strerror(errno)));
+                               "): " + std::string(std::strerror(errno)));
     }
   }
 
