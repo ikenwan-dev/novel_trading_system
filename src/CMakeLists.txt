@@ -13,5 +13,6 @@ add_subdirectory(LimitOrderBook)
 add_subdirectory(Constants)
 add_subdirectory(OrderManagementSystem)
 add_subdirectory(NetworkSimulator)
+add_subdirectory(VirtualExchange)
 
 

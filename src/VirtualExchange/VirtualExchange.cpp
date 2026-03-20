@@ -1,5 +1,6 @@
 #include "VirtualExchange.h"
 #include "Events/Event.h"
+#include <algorithm>
 
 namespace backtesting_engine {
 void VirtualExchange::on_update(const EventV2 &event) {
@@ -26,12 +27,15 @@ void VirtualExchange::on_create_order(uint64_t timestamp_ns,
   // if there are orders at this price level, subtract the qty ahead of the
   // order that is ahead of this one
   auto it = levels.find(event.price);
-  if (it != levels.end() && !it->second.empty()) {
-    qty_ahead -= it->second.rbegin()->qty_ahead;
+  if (it != levels.end()) {
+    // Subtract ALL relative qty_ahead values from prior orders to find the
+    // remaining market orders
+    qty_ahead -= it->second.total_qty_ahead;
   }
 
-  levels[event.price].emplace_back(event.order_id, qty_ahead, event.qty,
-                                   event.qty);
+  levels[event.price].orders.emplace_back(event.order_id, qty_ahead, event.qty,
+                                          event.qty);
+  levels[event.price].total_qty_ahead += qty_ahead;
   order_metadata_.emplace(event.order_id,
                           VirtualOrderMetaData{event.side, event.price});
   simulator_.send_inbound_event(
@@ -46,8 +50,14 @@ void VirtualExchange::on_cancel_order(uint64_t timestamp_ns,
   VirtualPriceLevel &level = get_price_level(levels, price)->second;
 
   auto order_it = get_order(level, event.order_id);
-  level.erase(order_it);
-  if (level.empty()) {
+  auto next_order_it = std::next(order_it);
+  if (next_order_it != level.orders.end()) {
+    next_order_it->qty_ahead += order_it->qty_ahead;
+  } else {
+    level.total_qty_ahead -= order_it->qty_ahead;
+  }
+  level.orders.erase(order_it);
+  if (level.orders.empty()) {
     levels.erase(price);
   }
   order_metadata_.erase(order_metadata_it);
@@ -56,6 +66,24 @@ void VirtualExchange::on_cancel_order(uint64_t timestamp_ns,
 }
 void VirtualExchange::on_fill(const databento::MboMsg &msg) {
   VirtualPriceLevels &levels = get_side(msg.side);
+  uint64_t fill_qty_left = msg.size;
+  uint64_t timestamp_ns = msg.ts_recv.time_since_epoch().count();
+
+  if (msg.side == databento::Side::Bid) {
+    auto levels_it = levels.rbegin();
+    while (levels_it != levels.rend() && levels_it->first >= msg.price &&
+           fill_qty_left) {
+      fill_orders_at_price_level(levels_it, fill_qty_left, timestamp_ns);
+      levels_it++;
+    }
+  } else {
+    auto levels_it = levels.begin();
+    while (levels_it != levels.end() && levels_it->first <= msg.price &&
+           fill_qty_left) {
+      fill_orders_at_price_level(levels_it, fill_qty_left, timestamp_ns);
+      levels_it++;
+    }
+  }
 }
 
 VirtualExchange::VirtualPriceLevels &
@@ -77,13 +105,13 @@ VirtualExchange::get_price_level(VirtualPriceLevels &levels, int64_t price) {
   return level_it;
 }
 
-VirtualExchange::VirtualPriceLevel::iterator
+std::vector<VirtualExchange::VirtualOrder>::iterator
 VirtualExchange::get_order(VirtualPriceLevel &level, uint64_t order_id) {
-  auto order_it = std::find_if(level.begin(), level.end(),
+  auto order_it = std::find_if(level.orders.begin(), level.orders.end(),
                                [order_id](const VirtualOrder &order) {
                                  return order.order_id == order_id;
                                });
-  if (order_it == level.end()) {
+  if (order_it == level.orders.end()) {
     throw std::runtime_error{"Order with id " + std::to_string(order_id) +
                              " does not exist in level"};
   }
