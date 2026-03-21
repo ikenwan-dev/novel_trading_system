@@ -20,6 +20,7 @@ void VirtualExchange::on_create_order(uint64_t timestamp_ns,
                                       const CreateOrderEvent &event) {
   if (order_metadata_.find(event.order_id) != order_metadata_.end()) {
     throw std::runtime_error{"Order already exists"};
+    // Could also potentially reject order
   }
   VirtualPriceLevels &levels = get_side(event.side);
   uint64_t qty_ahead = lob_.get_level_qty(event.side, event.price);
@@ -73,14 +74,16 @@ void VirtualExchange::on_fill(const databento::MboMsg &msg) {
     auto levels_it = levels.rbegin();
     while (levels_it != levels.rend() && levels_it->first >= msg.price &&
            fill_qty_left) {
-      fill_orders_at_price_level(levels_it, fill_qty_left, timestamp_ns);
+      fill_orders_at_price_level(levels_it, fill_qty_left, timestamp_ns,
+                                 msg.price);
       levels_it++;
     }
   } else {
     auto levels_it = levels.begin();
     while (levels_it != levels.end() && levels_it->first <= msg.price &&
            fill_qty_left) {
-      fill_orders_at_price_level(levels_it, fill_qty_left, timestamp_ns);
+      fill_orders_at_price_level(levels_it, fill_qty_left, timestamp_ns,
+                                 msg.price);
       levels_it++;
     }
   }

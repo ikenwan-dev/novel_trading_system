@@ -49,7 +49,7 @@ struct AckCancelOrderEvent {
 struct AckFillOrderEvent {
   uint64_t order_id;
   uint64_t filled_qty;
-  // int64_t price;
+  int64_t price;
 };
 
 using EventPayload =

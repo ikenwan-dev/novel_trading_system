@@ -19,7 +19,8 @@ private:
   template <typename LevelIterator>
   void fill_orders_at_price_level(LevelIterator &levels_it,
                                   uint64_t &fill_qty_left,
-                                  uint64_t timestamp_ns);
+                                  uint64_t timestamp_ns,
+                                  int64_t actual_fill_price);
 
   struct VirtualOrderMetaData {
     databento::Side side;
@@ -60,7 +61,8 @@ private:
 template <typename LevelIterator>
 void VirtualExchange::fill_orders_at_price_level(LevelIterator &levels_it,
                                                  uint64_t &fill_qty_left,
-                                                 uint64_t timestamp_ns) {
+                                                 uint64_t timestamp_ns,
+                                                 int64_t actual_fill_price) {
   auto level_it = levels_it->second.orders.begin();
   while (level_it != levels_it->second.orders.end() && fill_qty_left) {
     bool left_over = level_it->qty_ahead < fill_qty_left;
@@ -88,7 +90,7 @@ void VirtualExchange::fill_orders_at_price_level(LevelIterator &levels_it,
     }
     if (filled_qty) {
       simulator_.send_inbound_event(
-          {timestamp_ns, AckFillOrderEvent{level_it->order_id, filled_qty}});
+          {timestamp_ns, AckFillOrderEvent{level_it->order_id, filled_qty, actual_fill_price}});
     }
 
     // --- ADD ERASURE LOGIC ---
