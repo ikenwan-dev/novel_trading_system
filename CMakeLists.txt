@@ -20,7 +20,7 @@ target_link_libraries(MainMboEventLoop PRIVATE DataConsumer Events NetworkSimula
 add_executable(MainBarEventLoop src/main.cpp)
 
 target_link_libraries(MainBarEventLoop PRIVATE 
-    Strategies
+    BarStrategies
     Statistics
     ExecutionHandlers
     RiskManager
