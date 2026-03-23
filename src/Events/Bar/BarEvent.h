@@ -1,5 +1,4 @@
 #pragma once
-#include <cstdint>
 
 namespace backtesting_engine::bar {
 enum class EventType { Market, Signal, Order, Fill };
