@@ -5,7 +5,7 @@
 #include "ThreadSafeQueue/ThreadSafeQueue.h"
 #include <memory>
 
-
+// for bar data engine
 namespace backtesting_engine {
 class SimulatedExecutionHandler : public ExecutionHandler {
 public:

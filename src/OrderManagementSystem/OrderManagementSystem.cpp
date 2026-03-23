@@ -47,7 +47,7 @@ void OrderManagementSystem::ack_fill_order(OrderID order_id,
   }
 
   OMSOrder &order = orders_[order_id];
-  if (order.status != OMSOrderStatus::LIVE ||
+  if (order.status != OMSOrderStatus::LIVE &&
       order.status != OMSOrderStatus::PARTIALLY_FILLED) {
     throw std::runtime_error("Order is not live or partially filled");
   }
