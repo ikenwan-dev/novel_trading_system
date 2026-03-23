@@ -1,10 +1,10 @@
 #pragma once
-#include "Events/Event.h"
+#include "Events/Bar/BarEvent.h"
 #include <chrono>
 #include <string>
 
 
-namespace backtesting_engine {
+namespace backtesting_engine::bar {
 class MarketEvent : public Event {
 public:
   MarketEvent(std::string ticker,
@@ -23,4 +23,4 @@ public:
   const double low_;
   const int volume_;
 };
-} // namespace backtesting_engine
+} // namespace backtesting_engine::bar

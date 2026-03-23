@@ -1,11 +1,11 @@
 #include "RiskManager.h"
-#include "Events/OrderEvent/OrderEvent.h"
-#include "Events/SignalEvent/SignalEvent.h"
+#include "Events/Bar/OrderEvent/OrderEvent.h"
+#include "Events/Bar/SignalEvent/SignalEvent.h"
 #include <iostream>
 #include <memory>
 
 
-namespace backtesting_engine {
+namespace backtesting_engine::bar {
 void RiskManager::on_signal(const SignalEvent &signal_event) {
   // TODO: dont use fixed position sizing and instead do 1-2% based on account
   // value
@@ -40,4 +40,4 @@ void RiskManager::on_signal(const SignalEvent &signal_event) {
                                            signal_event.timestamp_,
                                            position_size, order_direction));
 }
-} // namespace backtesting_engine
+} // namespace backtesting_engine::bar

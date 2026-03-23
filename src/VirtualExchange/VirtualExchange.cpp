@@ -1,8 +1,8 @@
 #include "VirtualExchange.h"
-#include "Events/Event.h"
+#include "Events/Mbo/MboEvent.h"
 #include <algorithm>
 
-namespace backtesting_engine {
+namespace backtesting_engine::mbo {
 void VirtualExchange::on_update(const EventV2 &event) {
   if (std::holds_alternative<CreateOrderEvent>(event.payload)) {
     on_create_order(event.timestamp_ns,
@@ -129,4 +129,4 @@ VirtualExchange::get_order_metadata(uint64_t order_id) {
   }
   return order_metadata_it;
 }
-} // namespace backtesting_engine
+} // namespace backtesting_engine::mbo

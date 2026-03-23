@@ -1,9 +1,9 @@
 #include "OrderManagementSystem/OrderManagementSystem.h"
-#include "Events/Event.h"
+#include "Events/Mbo/MboEvent.h"
 #include <cstdint>
 #include <stdexcept>
 
-namespace backtesting_engine {
+namespace backtesting_engine::mbo {
 OrderManagementSystem::OrderManagementSystem(NetworkSimulator &simulator,
                                              std::size_t max_orders)
     : simulator_(simulator), max_orders_(max_orders) {
@@ -107,4 +107,4 @@ OrderManagementSystem::get_order(OrderID order_id) const {
   return orders_[order_id];
 }
 
-} // namespace backtesting_engine
+} // namespace backtesting_engine::mbo

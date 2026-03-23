@@ -7,11 +7,11 @@
 #include <vector>
 
 
-namespace backtesting_engine {
+namespace backtesting_engine::mbo {
 class DataBentoProducer : public DataProducer {
 public:
   using Interactor =
-      IPCInteractor<databento::MboMsg, Constants::RING_BUFFER_SIZE>;
+      common::IPCInteractor<databento::MboMsg, Constants::RING_BUFFER_SIZE>;
 
   DataBentoProducer(const std::vector<std::string> filepaths,
                     Interactor &writer);
@@ -28,4 +28,4 @@ private:
   std::vector<std::string> mbo_filepaths_;
   Interactor &writer_;
 };
-} // namespace backtesting_engine
+} // namespace backtesting_engine::mbo

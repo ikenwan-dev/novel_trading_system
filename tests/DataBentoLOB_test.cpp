@@ -2,6 +2,7 @@
 #include <gtest/gtest.h>
 
 using namespace backtesting_engine;
+using namespace backtesting_engine::mbo;
 
 class DataBentoLOBTest : public ::testing::Test {
 protected:

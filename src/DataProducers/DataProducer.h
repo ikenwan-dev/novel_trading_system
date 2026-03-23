@@ -1,7 +1,7 @@
 #pragma once
 
 
-namespace backtesting_engine {
+namespace backtesting_engine::mbo {
 class DataProducer {
 public:
   virtual void produce() = 0;
@@ -15,4 +15,4 @@ public:
 protected:
   DataProducer() = default;
 };
-} // namespace backtesting_engine
+} // namespace backtesting_engine::mbo

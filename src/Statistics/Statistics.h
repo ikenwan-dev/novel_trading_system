@@ -2,7 +2,7 @@
 #include <vector>
 
 
-namespace backtesting_engine {
+namespace backtesting_engine::bar {
 struct EquityDataPoint {
   std::chrono::system_clock::time_point timestamp;
   double value;
@@ -13,4 +13,4 @@ public:
   static double
   calculate_cagr(const std::vector<EquityDataPoint> &equity_curve);
 };
-} // namespace backtesting_engine
+} // namespace backtesting_engine::bar

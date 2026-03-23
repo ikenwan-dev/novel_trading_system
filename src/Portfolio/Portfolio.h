@@ -1,13 +1,13 @@
 #pragma once
 
 #include "DataHandlers/DataHandler.h"
-#include "Events/FillEvent/FillEvent.h"
-#include "Events/MarketEvent/MarketEvent.h"
+#include "Events/Bar/FillEvent/FillEvent.h"
+#include "Events/Bar/MarketEvent/MarketEvent.h"
 #include <map>
 #include <string>
 
 
-namespace backtesting_engine {
+namespace backtesting_engine::bar {
 class Portfolio {
 public:
   Portfolio(DataHandler &data_handler, double initial_capital)
@@ -56,4 +56,4 @@ private:
   std::map<std::string, Position> positions_;
 };
 
-} // namespace backtesting_engine
+} // namespace backtesting_engine::bar

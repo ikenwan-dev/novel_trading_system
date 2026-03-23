@@ -8,7 +8,7 @@
 #include <utility>
 #include <vector>
 
-namespace backtesting_engine {
+namespace backtesting_engine::mbo {
 class DataBentoLOB {
 public:
   void update_book(const databento::MboMsg &msg);
@@ -46,4 +46,4 @@ private:
   std::vector<databento::MboMsg>::iterator get_order_message(uint64_t order_id,
                                                              PriceLevel &level);
 };
-} // namespace backtesting_engine
+} // namespace backtesting_engine::mbo

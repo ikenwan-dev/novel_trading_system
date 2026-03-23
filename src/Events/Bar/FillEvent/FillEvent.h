@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Events/Event.h"
-#include "Events/OrderEvent/OrderEvent.h"
+#include "Events/Bar/BarEvent.h"
+#include "Events/Bar/OrderEvent/OrderEvent.h"
 #include <chrono>
 #include <string>
 
 
-namespace backtesting_engine {
+namespace backtesting_engine::bar {
 class FillEvent : public Event {
 public:
   FillEvent(std::string ticker, std::chrono::system_clock::time_point timestamp,
@@ -26,4 +26,4 @@ public:
   const double commision_;
 };
 
-} // namespace backtesting_engine
+} // namespace backtesting_engine::bar

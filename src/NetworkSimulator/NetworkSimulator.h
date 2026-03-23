@@ -1,7 +1,7 @@
 #pragma once
-#include "Events/Event.h"
+#include "Events/Mbo/MboEvent.h"
 #include <cstdint>
-namespace backtesting_engine {
+namespace backtesting_engine::mbo {
 class NetworkSimulator {
 public:
   explicit NetworkSimulator(EventQueue &event_queue, uint64_t outbound_latency,
@@ -33,4 +33,4 @@ private:
   uint64_t outbound_latency;
   uint64_t inbound_latency;
 };
-} // namespace backtesting_engine
+} // namespace backtesting_engine::mbo

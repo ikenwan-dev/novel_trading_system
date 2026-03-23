@@ -6,6 +6,7 @@
 #include <filesystem>
 
 using namespace backtesting_engine;
+using namespace backtesting_engine::mbo;
 
 std::vector<std::string> get_dbn_files(const std::string &directory) {
   std::vector<std::string> files;

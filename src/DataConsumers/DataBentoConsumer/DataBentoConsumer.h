@@ -7,11 +7,11 @@
 #include <databento/historical.hpp>
 
 
-namespace backtesting_engine {
+namespace backtesting_engine::mbo {
 class DataBentoConsumer : public DataConsumer {
 public:
   using Interactor =
-      IPCInteractor<databento::MboMsg, Constants::RING_BUFFER_SIZE>;
+      common::IPCInteractor<databento::MboMsg, Constants::RING_BUFFER_SIZE>;
 
   DataBentoConsumer(Interactor &reader);
   ~DataBentoConsumer() = default;
@@ -27,4 +27,4 @@ private:
   Interactor &reader_;
   DataBentoLOB lob_;
 };
-} // namespace backtesting_engine
+} // namespace backtesting_engine::mbo

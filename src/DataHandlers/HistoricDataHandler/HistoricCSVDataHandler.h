@@ -1,18 +1,18 @@
 #pragma once
 #include "DataHandlers/DataHandler.h"
 #include "DataHandlers/DataTypes/DataTypes.h"
-#include "Events/Event.h"
+#include "Events/Bar/BarEvent.h"
 #include "ThreadSafeQueue/ThreadSafeQueue.h"
 #include <optional>
 #include <unordered_map>
 #include <vector>
 
 
-namespace backtesting_engine {
+namespace backtesting_engine::bar {
 class HistoricCSVDataHandler : public DataHandler {
 public:
   HistoricCSVDataHandler(
-      ThreadSafeQueue<std::shared_ptr<Event>> &queue,
+      common::ThreadSafeQueue<std::shared_ptr<Event>> &queue,
       const std::unordered_map<std::string, std::string> &csv_files);
 
   void update() override;
@@ -24,7 +24,7 @@ public:
   load_all_data(const std::unordered_map<std::string, std::string> &csv_files);
   static std::vector<Bar> load_stooq_file(const std::string &filename);
 
-  ThreadSafeQueue<std::shared_ptr<Event>> &event_queue_;
+  common::ThreadSafeQueue<std::shared_ptr<Event>> &event_queue_;
 
   // Map of ticker to vector of bar data. Sorted in ascending order by timestamp
   std::unordered_map<std::string, std::vector<Bar>> all_data_;
@@ -39,4 +39,4 @@ private:
   parse_stooq_datetime(const std::string &dateStr, const std::string &timeStr);
 };
 
-} // namespace backtesting_engine
+} // namespace backtesting_engine::bar

@@ -1,22 +1,22 @@
 #pragma once
 
-#include "Events/Event.h"
-#include "Events/SignalEvent/SignalEvent.h"
+#include "Events/Bar/BarEvent.h"
+#include "Events/Bar/SignalEvent/SignalEvent.h"
 #include "Portfolio/Portfolio.h"
 #include "ThreadSafeQueue/ThreadSafeQueue.h"
 #include <memory>
 
-namespace backtesting_engine {
+namespace backtesting_engine::bar {
 class RiskManager {
 public:
   RiskManager(Portfolio &portfolio,
-              ThreadSafeQueue<std::shared_ptr<Event>>& queue)
+              common::ThreadSafeQueue<std::shared_ptr<Event>>& queue)
       : portfolio_(portfolio), queue_(queue) {}
 
   void on_signal(const SignalEvent &event);
 
 private:
   Portfolio &portfolio_;
-  ThreadSafeQueue<std::shared_ptr<Event>> &queue_;
+  common::ThreadSafeQueue<std::shared_ptr<Event>> &queue_;
 };
-} // namespace backtesting_engine
+} // namespace backtesting_engine::bar

@@ -1,12 +1,12 @@
 #pragma once
-#include "Events/Event.h"
+#include "Events/Mbo/MboEvent.h"
 #include "LimitOrderBook/DataBentoLOB/DataBentoLOB.h"
 #include "NetworkSimulator/NetworkSimulator.h"
 #include <databento/record.hpp>
 #include <map>
 #include <unordered_map>
 
-namespace backtesting_engine {
+namespace backtesting_engine::mbo {
 class VirtualExchange {
 public:
   VirtualExchange(NetworkSimulator &simulator, DataBentoLOB &lob)
@@ -110,4 +110,4 @@ void VirtualExchange::fill_orders_at_price_level(LevelIterator &levels_it,
   }
 }
 
-} // namespace backtesting_engine
+} // namespace backtesting_engine::mbo

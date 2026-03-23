@@ -5,26 +5,7 @@
 #include <variant>
 #include <vector>
 
-namespace backtesting_engine {
-// Enum for all event subtypes. This will be used for easy and readible checking
-// of event types
-enum class EventType { Market, Signal, Order, Fill };
-
-// Base class for all event sub types. Sub types should have a corresponding
-// enum EventType
-class Event {
-public:
-  virtual ~Event() = default;
-
-  // Pure virtual function to get the event type.
-  // MUST BE IMPLEMENTED BY SUBCLASSES
-  virtual EventType get_type() const = 0;
-};
-
-// MBO event definitions below
-//
-//
-//
+namespace backtesting_engine::mbo {
 struct CreateOrderEvent {
   uint64_t order_id;
   int64_t price;
@@ -73,4 +54,4 @@ struct EventCompare {
 // Define the discrete event queue
 using EventQueue =
     std::priority_queue<EventV2, std::vector<EventV2>, EventCompare>;
-} // namespace backtesting_engine
+} // namespace backtesting_engine::mbo::mbo

@@ -1,5 +1,5 @@
 #include "Constants/Constants.h"
-#include "Events/Event.h"
+#include "Events/Mbo/MboEvent.h"
 #include "LimitOrderBook/DataBentoLOB/DataBentoLOB.h"
 #include "NetworkSimulator/NetworkSimulator.h"
 #include "SharedMemory/IPCInteractor.h"
@@ -9,9 +9,10 @@
 #include <map>
 
 using namespace backtesting_engine;
+using namespace backtesting_engine::mbo;
 
 using Interactor =
-    IPCInteractor<databento::MboMsg, Constants::RING_BUFFER_SIZE>;
+    common::IPCInteractor<databento::MboMsg, Constants::RING_BUFFER_SIZE>;
 
 databento::MboMsg get_next_msg(Interactor &reader, databento::MboMsg &msg) {
   while (!reader.pop(msg)) {

@@ -6,7 +6,7 @@
 #include <databento/enums.hpp>
 #include <vector>
 
-namespace backtesting_engine {
+namespace backtesting_engine::mbo {
 class OrderManagementSystem {
   using OrderID = uint64_t;
 
@@ -48,4 +48,4 @@ private:
   int64_t holdings_ = 0;
   int64_t cash_ = 0;
 };
-} // namespace backtesting_engine
+} // namespace backtesting_engine::mbo

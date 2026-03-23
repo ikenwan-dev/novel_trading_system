@@ -1,10 +1,9 @@
 #pragma once
-#include "../Event.h"
+#include "Events/Bar/BarEvent.h"
 #include <chrono>
 #include <string>
 
-
-namespace backtesting_engine {
+namespace backtesting_engine::bar {
 enum class SignalDirection { LONG, SHORT };
 
 // Overload the << operator
@@ -34,4 +33,4 @@ public:
   const std::chrono::system_clock::time_point timestamp_;
   const SignalDirection direction_;
 };
-} // namespace backtesting_engine
+} // namespace backtesting_engine::bar

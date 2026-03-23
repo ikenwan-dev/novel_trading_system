@@ -1,5 +1,5 @@
 #pragma once
-#include "Strategies/Strategy.h"
+#include "Strategies/BarStrategies/Strategy.h"
 #include "ThreadSafeQueue/ThreadSafeQueue.h"
 #include <deque>
 #include <map>
@@ -7,10 +7,10 @@
 #include <vector>
 class MovingAverageCrossoverFixture;
 
-namespace backtesting_engine {
+namespace backtesting_engine::bar {
 class MovingAverageCrossover : public Strategy {
 public:
-  MovingAverageCrossover(ThreadSafeQueue<std::shared_ptr<Event>> &event_queue,
+  MovingAverageCrossover(common::ThreadSafeQueue<std::shared_ptr<Event>> &event_queue,
                          const std::vector<std::string> &tickers,
                          int short_window, int long_window);
 
@@ -21,7 +21,7 @@ public:
 private:
   friend class ::MovingAverageCrossoverFixture;
   double calculate_moving_average(const std::deque<double> &prices);
-  ThreadSafeQueue<std::shared_ptr<Event>> &event_queue_;
+  common::ThreadSafeQueue<std::shared_ptr<Event>> &event_queue_;
   const std::vector<std::string> tickers_;
   const int short_window_;
   const int long_window_;
@@ -31,4 +31,4 @@ private:
   std::map<std::string, double> short_mas_;
   std::map<std::string, double> long_mas_;
 };
-} // namespace backtesting_engine
+} // namespace backtesting_engine::bar

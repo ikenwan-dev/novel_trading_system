@@ -1,12 +1,12 @@
 #include "Portfolio.h"
-#include "Events/FillEvent/FillEvent.h"
-#include "Events/MarketEvent/MarketEvent.h"
-#include "Events/OrderEvent/OrderEvent.h"
+#include "Events/Bar/FillEvent/FillEvent.h"
+#include "Events/Bar/MarketEvent/MarketEvent.h"
+#include "Events/Bar/OrderEvent/OrderEvent.h"
 #include <algorithm>
 #include <iostream>
 
 
-namespace backtesting_engine {
+namespace backtesting_engine::bar {
 void Portfolio::on_fill(const FillEvent &event) {
   auto &pos = positions_[event.ticker_];
   auto &quantity = pos.quantity;
@@ -95,4 +95,4 @@ double Portfolio::get_unrealized_pnl() const {
   }
   return unrealized_pnl;
 }
-} // namespace backtesting_engine
+} // namespace backtesting_engine::bar

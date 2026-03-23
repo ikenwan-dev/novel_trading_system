@@ -4,7 +4,7 @@
 #include <string>
 
 
-namespace backtesting_engine {
+namespace backtesting_engine::bar {
 class DataHandler {
 public:
   virtual ~DataHandler() = default;
@@ -20,4 +20,4 @@ public:
   virtual std::optional<Bar>
   get_latest_price_info(const std::string &ticker) const = 0;
 };
-} // namespace backtesting_engine
+} // namespace backtesting_engine::bar

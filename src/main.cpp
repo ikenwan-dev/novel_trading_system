@@ -4,9 +4,9 @@
 #include "Portfolio/Portfolio.h"
 #include "RiskManager/RiskManager.h"
 #include "Statistics/Statistics.h"
-#include "Strategies/MovingAverageCrossover/MovingAverageCrossover.h"
-#include "Strategies/Strategy.h"
-#include "Strategies/StrategyConfig.h"
+#include "Strategies/BarStrategies/MovingAverageCrossover/MovingAverageCrossover.h"
+#include "Strategies/BarStrategies/Strategy.h"
+#include "Strategies/BarStrategies/StrategyConfig.h"
 #include "ThreadSafeQueue/ThreadSafeQueue.h"
 #include "glaze/json/read.hpp"
 #include <fstream>
@@ -17,6 +17,7 @@
 #include <string>
 
 using namespace backtesting_engine;
+using namespace backtesting_engine::bar;
 
 StrategyConfig load_config_from_file(const std::string &filepath) {
   StrategyConfig sc;
@@ -31,7 +32,7 @@ StrategyConfig load_config_from_file(const std::string &filepath) {
 
 std::shared_ptr<Strategy> load_strategy_from_config(
     const StrategyConfig &sc,
-    ThreadSafeQueue<std::shared_ptr<Event>> &event_queue) {
+    common::ThreadSafeQueue<std::shared_ptr<Event>> &event_queue) {
   if (sc.name == "MovingAverageCrossover") {
     auto keys_view = std::views::keys(sc.ticker_map);
     std::vector<std::string> tickers{keys_view.begin(), keys_view.end()};
@@ -64,7 +65,7 @@ int main() {
     std::cout << "Initializing components...\n" << std::endl;
 
     auto event_queue =
-        std::make_shared<ThreadSafeQueue<std::shared_ptr<Event>>>();
+        std::make_shared<common::ThreadSafeQueue<std::shared_ptr<Event>>>();
     std::cout << "Event queue created" << std::endl;
 
     // Load strategy from config

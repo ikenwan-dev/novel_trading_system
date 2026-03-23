@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Events/Event.h"
+#include "Events/Bar/BarEvent.h"
 #include <chrono>
 #include <optional>
 #include <string>
 
 
-namespace backtesting_engine {
+namespace backtesting_engine::bar {
 enum class OrderDirection { BUY, SELL };
 inline std::ostream &operator<<(std::ostream &os, OrderDirection od) {
   switch (od) {
@@ -54,4 +54,4 @@ public:
   const OrderDirection direction_;
   const std::optional<double> limit_price_;
 };
-} // namespace backtesting_engine
+} // namespace backtesting_engine::bar

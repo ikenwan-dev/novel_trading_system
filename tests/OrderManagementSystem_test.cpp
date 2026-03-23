@@ -1,9 +1,10 @@
 #include "OrderManagementSystem/OrderManagementSystem.h"
 #include "NetworkSimulator/NetworkSimulator.h"
-#include "Events/Event.h"
+#include "Events/Mbo/MboEvent.h"
 #include <gtest/gtest.h>
 
 using namespace backtesting_engine;
+using namespace backtesting_engine::mbo;
 
 class OrderManagementSystemTest : public ::testing::Test {
 protected:

@@ -1,8 +1,9 @@
-#include "Events/SignalEvent/SignalEvent.h"
-#include "Strategies/MovingAverageCrossover/MovingAverageCrossover.h"
+#include "Events/Bar/SignalEvent/SignalEvent.h"
+#include "Strategies/BarStrategies/MovingAverageCrossover/MovingAverageCrossover.h"
 #include "gtest/gtest.h"
 
 using namespace backtesting_engine;
+using namespace backtesting_engine::bar;
 #include <chrono>
 #include <memory>
 
@@ -14,7 +15,7 @@ protected:
     return mac->calculate_moving_average(prices);
   }
 
-  void initialize(ThreadSafeQueue<std::shared_ptr<Event>> &event_queue,
+  void initialize(common::ThreadSafeQueue<std::shared_ptr<Event>> &event_queue,
                   const std::vector<std::string> &tickers, int short_window,
                   int long_window) {
     mac = std::make_unique<MovingAverageCrossover>(event_queue, tickers,
@@ -23,7 +24,7 @@ protected:
 };
 
 TEST_F(MovingAverageCrossoverFixture, CalculatesMovingAverage) {
-  ThreadSafeQueue<std::shared_ptr<Event>> event_queue;
+  common::ThreadSafeQueue<std::shared_ptr<Event>> event_queue;
   initialize(event_queue, {"AAPL"}, 2, 5);
   std::deque<double> prices = {10.0, 20.0, 30.0};
   double ma = call_calculate_moving_average(prices);
@@ -31,7 +32,7 @@ TEST_F(MovingAverageCrossoverFixture, CalculatesMovingAverage) {
 }
 
 TEST_F(MovingAverageCrossoverFixture, EmitsLongSignalOnCrossover) {
-  ThreadSafeQueue<std::shared_ptr<Event>> event_queue;
+  common::ThreadSafeQueue<std::shared_ptr<Event>> event_queue;
   std::vector<std::string> tickers = {"AAPL"};
   // Short 2, Long 3
   initialize(event_queue, tickers, 2, 3);

@@ -1,11 +1,11 @@
 #include "SimulatedExecutionHandler.h"
-#include "Events/FillEvent/FillEvent.h"
-#include "Events/OrderEvent/OrderEvent.h"
+#include "Events/Bar/FillEvent/FillEvent.h"
+#include "Events/Bar/OrderEvent/OrderEvent.h"
 #include <iostream>
 #include <memory>
 
 
-namespace backtesting_engine {
+namespace backtesting_engine::bar {
 // While this will work in backtesting. For live trading, we will need to
 // implement a orderbook system to manage and retry these orders.
 // Also we will need to handle slippage and other market microstructure effects
@@ -56,4 +56,4 @@ void SimulatedExecutionHandler::on_order(const OrderEvent &order_event) {
 
   event_queue_.push(fill_event);
 }
-} // namespace backtesting_engine
+} // namespace backtesting_engine::bar

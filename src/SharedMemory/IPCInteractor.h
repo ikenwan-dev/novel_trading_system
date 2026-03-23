@@ -5,9 +5,9 @@
 #include <string>
 
 
-namespace backtesting_engine {
+namespace backtesting_engine::common {
 template <typename T, size_t Capacity> class IPCInteractor {
-  using RingBuffer = SharedRingBuffer<T, Capacity>;
+  using RingBuffer = common::SharedRingBuffer<T, Capacity>;
 
 public:
   IPCInteractor(const std::string &shm_name, const bool create = true)
@@ -49,4 +49,4 @@ private:
   RingBuffer *ring_buffer_;
 };
 
-} // namespace backtesting_engine
+} // namespace backtesting_engine::common

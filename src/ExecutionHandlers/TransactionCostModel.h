@@ -1,9 +1,9 @@
 #pragma once
-#include "Events/FillEvent/FillEvent.h"
+#include "Events/Bar/FillEvent/FillEvent.h"
 #include <algorithm>
 
 
-namespace backtesting_engine {
+namespace backtesting_engine::bar {
 class TransactionCostModel {
 public:
   virtual ~TransactionCostModel() = default;
@@ -38,4 +38,4 @@ private:
   const double commission_per_share_;
   const double min_commission_;
 };
-} // namespace backtesting_engine
+} // namespace backtesting_engine::bar

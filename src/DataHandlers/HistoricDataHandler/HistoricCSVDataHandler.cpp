@@ -1,5 +1,5 @@
 #include "HistoricCSVDataHandler.h"
-#include "Events/MarketEvent/MarketEvent.h"
+#include "Events/Bar/MarketEvent/MarketEvent.h"
 #include "csv.h"
 #include <chrono>
 #include <iostream>
@@ -7,7 +7,7 @@
 #include <string>
 
 
-namespace backtesting_engine {
+namespace backtesting_engine::bar {
 std::chrono::system_clock::time_point
 HistoricCSVDataHandler::parse_stooq_datetime(const std::string &dateStr,
                                              const std::string &timeStr) {
@@ -88,7 +88,7 @@ HistoricCSVDataHandler::load_stooq_file(const std::string &filename) {
 }
 
 HistoricCSVDataHandler::HistoricCSVDataHandler(
-    ThreadSafeQueue<std::shared_ptr<Event>> &event_queue,
+    common::ThreadSafeQueue<std::shared_ptr<Event>> &event_queue,
     const std::unordered_map<std::string, std::string> &csv_files)
     : event_queue_(event_queue) {
   load_all_data(csv_files);
@@ -144,4 +144,4 @@ HistoricCSVDataHandler::get_latest_price_info(const std::string &ticker) const {
   }
   return all_data_.at(ticker)[it->second];
 }
-} // namespace backtesting_engine
+} // namespace backtesting_engine::bar

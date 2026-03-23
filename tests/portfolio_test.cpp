@@ -1,9 +1,10 @@
-#include "Events/FillEvent/FillEvent.h"
-#include "Events/OrderEvent/OrderEvent.h"
+#include "Events/Bar/FillEvent/FillEvent.h"
+#include "Events/Bar/OrderEvent/OrderEvent.h"
 #include "Portfolio/Portfolio.h"
 #include "gtest/gtest.h"
 
 using namespace backtesting_engine;
+using namespace backtesting_engine::bar;
 
 class MockDataHandler : public DataHandler {
   void update() override {}
