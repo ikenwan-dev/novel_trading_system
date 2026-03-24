@@ -4,7 +4,7 @@
 namespace backtesting_engine::mbo {
 template <typename Derived> class MBOStrategyBase {
 public:
-  // The hot path: called by your event loop when the LOB updates
+  // called by event loop when the LOB updates
   inline void on_book_update(int64_t timestamp_ns, const DataBentoLOB &lob) {
     // Static cast delegates to the derived class at compile time.
     // The compiler sees right through this and inlines the call.

@@ -31,7 +31,7 @@ OrderManagementSystem::create_order(uint64_t timestamp_ns, int64_t price,
   return next_order_id_++;
 }
 
-// to be called by virtual exchange
+// to be called by network simulator/ vx
 void OrderManagementSystem::ack_create_order(OrderID order_id) {
   if (order_id >= next_order_id_) {
     throw std::runtime_error("Invalid order id");
