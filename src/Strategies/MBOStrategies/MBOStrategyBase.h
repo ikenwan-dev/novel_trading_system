@@ -1,9 +1,14 @@
 #include "LimitOrderBook/DataBentoLOB/DataBentoLOB.h"
+#include "OrderManagementSystem/OrderManagementSystem.h"
 #include <databento/record.hpp>
 
 namespace backtesting_engine::mbo {
 template <typename Derived> class MBOStrategyBase {
+protected:
+  OrderManagementSystem &oms_;
+  // TODO: add risk engine reference
 public:
+  explicit MBOStrategyBase(OrderManagementSystem &oms) : oms_(oms) {}
   // called by event loop when the LOB updates
   inline void on_book_update(int64_t timestamp_ns, const DataBentoLOB &lob) {
     // Static cast delegates to the derived class at compile time.
@@ -15,15 +20,14 @@ public:
     static_cast<Derived *>(this)->impl_on_fill(order);
   }
 
-  // Common utility functions shared across all strategies
-  // (e.g., interacting with the OMS or Risk Engine)
   inline void send_order(uint64_t timestamp_ns, int64_t price, uint64_t qty,
                          databento::Side side) {
-    // Send to OMS / Network Simulator
+    // TODO: add risk engine check here
+    oms_.create_order(timestamp_ns, price, qty, side);
   }
 
   inline void cancel_order(int64_t timestamp_ns, uint64_t order_id) {
-    // Send cancel request
+    oms_.cancel_order(timestamp_ns, order_id);
   }
 };
 
