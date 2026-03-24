@@ -5,7 +5,7 @@
 
 namespace backtesting_engine::mbo {
 OrderManagementSystem::OrderManagementSystem(NetworkSimulator &simulator,
-                                             std::size_t max_orders)
+                                             std::size_t max_orders = 10000000)
     : simulator_(simulator), max_orders_(max_orders) {
   // Initialize orders vector
   orders_.resize(max_orders);

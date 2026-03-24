@@ -41,7 +41,7 @@ public:
   const OMSOrder &get_order(OrderID order_id) const;
 
 private:
-  std::size_t max_orders_ = 10000000;
+  std::size_t max_orders_;
   std::size_t next_order_id_ = 0;
   std::vector<OMSOrder> orders_;
   NetworkSimulator &simulator_;
