@@ -1,12 +1,12 @@
 #include "LimitOrderBook/DataBentoLOB/DataBentoLOB.h"
 #include "OrderManagementSystem/OrderManagementSystem.h"
+#include "RiskManager/Mbo/RiskResult.h"
 #include <databento/record.hpp>
 
 namespace backtesting_engine::mbo {
 template <typename Derived> class MBOStrategyBase {
 protected:
   OrderManagementSystem &oms_;
-  // TODO: add risk engine reference
 public:
   explicit MBOStrategyBase(OrderManagementSystem &oms) : oms_(oms) {}
   // called by event loop when the LOB updates
@@ -20,9 +20,12 @@ public:
     static_cast<Derived *>(this)->impl_on_fill(order);
   }
 
+  inline void on_order_rejected(uint64_t order_id, RiskResult reason) {
+    static_cast<Derived *>(this)->impl_on_order_rejected(order_id, reason);
+  }
+
   inline void send_order(uint64_t timestamp_ns, int64_t price, uint64_t qty,
                          databento::Side side) {
-    // TODO: add risk engine check here
     oms_.create_order(timestamp_ns, price, qty, side);
   }
 

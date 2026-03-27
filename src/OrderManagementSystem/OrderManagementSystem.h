@@ -1,6 +1,7 @@
 #pragma once
 
 #include "NetworkSimulator/NetworkSimulator.h"
+#include "RiskManager/Mbo/MBORiskManager.h"
 #include <cstddef>
 #include <cstdint>
 #include <databento/enums.hpp>
@@ -11,7 +12,7 @@ class OrderManagementSystem {
   using OrderID = uint64_t;
 
 public:
-  OrderManagementSystem(NetworkSimulator &simulator, std::size_t max_orders);
+  OrderManagementSystem(NetworkSimulator &simulator, MBORiskManager& risk_manager, std::size_t max_orders);
 
   enum class OMSOrderStatus {
     PENDING,
@@ -45,6 +46,7 @@ private:
   std::size_t next_order_id_ = 0;
   std::vector<OMSOrder> orders_;
   NetworkSimulator &simulator_;
+  MBORiskManager &risk_manager_;
   int64_t holdings_ = 0;
   int64_t cash_ = 0;
 };

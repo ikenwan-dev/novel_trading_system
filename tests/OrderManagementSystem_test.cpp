@@ -1,5 +1,6 @@
 #include "OrderManagementSystem/OrderManagementSystem.h"
 #include "NetworkSimulator/NetworkSimulator.h"
+#include "RiskManager/Mbo/MBORiskManager.h"
 #include "Events/Mbo/MboEvent.h"
 #include <gtest/gtest.h>
 
@@ -10,9 +11,10 @@ class OrderManagementSystemTest : public ::testing::Test {
 protected:
   EventQueue queue;
   NetworkSimulator sim;
+  MBORiskManager risk;
   OrderManagementSystem oms;
 
-  OrderManagementSystemTest() : queue(), sim(queue, 0, 0), oms(sim, 100) {}
+  OrderManagementSystemTest() : queue(), sim(queue, 0, 0), risk(1000000, 1000000), oms(sim, risk, 100) {}
 };
 
 TEST_F(OrderManagementSystemTest, CreateAndGetOrder) {
@@ -83,7 +85,8 @@ TEST_F(OrderManagementSystemTest, CancelThrowsOnAlreadyFilled) {
 TEST_F(OrderManagementSystemTest, MaxOrdersCapacityThrows) {
   EventQueue small_queue;
   NetworkSimulator small_sim(small_queue, 0, 0);
-  OrderManagementSystem small_oms(small_sim, 1);
+  MBORiskManager small_risk(1000000, 1000000);
+  OrderManagementSystem small_oms(small_sim, small_risk, 1);
   small_oms.create_order(0, 150, 100, databento::Side::Bid);
 
   EXPECT_THROW(small_oms.create_order(0, 150, 100, databento::Side::Bid),

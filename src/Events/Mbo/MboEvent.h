@@ -4,6 +4,7 @@
 #include <queue>
 #include <variant>
 #include <vector>
+#include "RiskManager/Mbo/RiskResult.h"
 
 namespace backtesting_engine::mbo {
 struct CreateOrderEvent {
@@ -33,9 +34,14 @@ struct AckFillOrderEvent {
   int64_t price;
 };
 
+struct RejectOrderEvent {
+  uint64_t order_id;
+  RiskResult reason;
+};
+
 using EventPayload =
     std::variant<CreateOrderEvent, AckCreateOrderEvent, CancelOrderEvent,
-                 AckCancelOrderEvent, AckFillOrderEvent>;
+                 AckCancelOrderEvent, AckFillOrderEvent, RejectOrderEvent>;
 
 struct EventV2 {
   uint64_t timestamp_ns; // The exact time this event occurs(nanoseconds since
@@ -54,4 +60,7 @@ struct EventCompare {
 // Define the discrete event queue
 using EventQueue =
     std::priority_queue<EventV2, std::vector<EventV2>, EventCompare>;
-} // namespace backtesting_engine::mbo::mbo
+static_assert(sizeof(EventV2) <= 64,
+              "EventV2 exceeds 64-byte cache line size! This will cause "
+              "performance degradation.");
+} // namespace backtesting_engine::mbo

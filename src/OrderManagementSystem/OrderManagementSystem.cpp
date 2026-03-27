@@ -4,9 +4,9 @@
 #include <stdexcept>
 
 namespace backtesting_engine::mbo {
-OrderManagementSystem::OrderManagementSystem(NetworkSimulator &simulator,
-                                             std::size_t max_orders = 10000000)
-    : simulator_(simulator), max_orders_(max_orders) {
+OrderManagementSystem::OrderManagementSystem(NetworkSimulator &simulator, MBORiskManager &risk_manager,
+                                             std::size_t max_orders)
+    : simulator_(simulator), risk_manager_(risk_manager), max_orders_(max_orders) {
   // Initialize orders vector
   orders_.resize(max_orders);
 }
@@ -17,6 +17,23 @@ OrderManagementSystem::create_order(uint64_t timestamp_ns, int64_t price,
   if (next_order_id_ == max_orders_) {
     throw std::runtime_error("OrderManagementSystem is full");
   }
+
+  RiskResult risk_status = risk_manager_.check_order(side, qty, price);
+  if (risk_status != RiskResult::APPROVED) {
+    uint64_t rejected_id = next_order_id_++;
+    OMSOrder &new_order = orders_[rejected_id];
+    new_order.order_id = rejected_id;
+    new_order.price = price;
+    new_order.qty = qty;
+    new_order.filled_qty = 0;
+    new_order.side = side;
+    new_order.status = OMSOrderStatus::REJECTED;
+
+    simulator_.send_outbound_event(
+        {timestamp_ns, RejectOrderEvent{rejected_id, risk_status}});
+    return rejected_id;
+  }
+
   OMSOrder &new_order = orders_[next_order_id_];
   new_order.order_id = next_order_id_;
   new_order.price = price;
@@ -71,6 +88,8 @@ void OrderManagementSystem::ack_fill_order(OrderID order_id,
     holdings_ -= filled_qty;
     cash_ += filled_qty * price;
   }
+
+  risk_manager_.on_fill(order.side, filled_qty, price);
   // Notify strategy
 }
 

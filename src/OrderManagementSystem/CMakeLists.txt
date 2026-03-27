@@ -1,3 +1,3 @@
 add_library(OrderManagementSystem OrderManagementSystem.cpp)
-target_link_libraries(OrderManagementSystem PUBLIC databento::databento NetworkSimulator PRIVATE MboEvents)
+target_link_libraries(OrderManagementSystem PUBLIC databento::databento NetworkSimulator PRIVATE MboEvents MBORiskManager)
 target_include_directories(OrderManagementSystem PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..)
