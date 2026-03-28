@@ -11,7 +11,7 @@ OrderManagementSystem::OrderManagementSystem(NetworkSimulator &simulator, MBORis
   orders_.resize(max_orders);
 }
 
-OrderManagementSystem::OrderID
+std::pair<OrderManagementSystem::OrderID, RiskResult>
 OrderManagementSystem::create_order(uint64_t timestamp_ns, int64_t price,
                                     uint64_t qty, databento::Side side) {
   if (next_order_id_ == max_orders_) {
@@ -29,13 +29,12 @@ OrderManagementSystem::create_order(uint64_t timestamp_ns, int64_t price,
     new_order.side = side;
     new_order.status = OMSOrderStatus::REJECTED;
 
-    simulator_.send_outbound_event(
-        {timestamp_ns, RejectOrderEvent{rejected_id, risk_status}});
-    return rejected_id;
+    return {rejected_id, risk_status};
   }
 
-  OMSOrder &new_order = orders_[next_order_id_];
-  new_order.order_id = next_order_id_;
+  uint64_t new_id = next_order_id_++;
+  OMSOrder &new_order = orders_[new_id];
+  new_order.order_id = new_id;
   new_order.price = price;
   new_order.qty = qty;
   new_order.filled_qty = 0;
@@ -45,7 +44,7 @@ OrderManagementSystem::create_order(uint64_t timestamp_ns, int64_t price,
   simulator_.send_outbound_event(
       {timestamp_ns, CreateOrderEvent{new_order.order_id, new_order.price,
                                       new_order.qty, new_order.side}});
-  return next_order_id_++;
+  return {new_id, RiskResult::APPROVED};
 }
 
 // to be called by network simulator/ vx

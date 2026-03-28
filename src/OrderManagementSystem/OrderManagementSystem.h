@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <databento/enums.hpp>
+#include <utility>
 #include <vector>
 
 namespace backtesting_engine::mbo {
@@ -33,7 +34,7 @@ public:
     databento::Side side;
     OMSOrderStatus status;
   };
-  OrderID create_order(uint64_t timestamp_ns, int64_t price, uint64_t qty,
+  std::pair<OrderID, RiskResult> create_order(uint64_t timestamp_ns, int64_t price, uint64_t qty,
                        databento::Side side);
   void ack_create_order(OrderID order_id);
   void ack_fill_order(OrderID order_id, uint64_t filled_qty, int64_t price);

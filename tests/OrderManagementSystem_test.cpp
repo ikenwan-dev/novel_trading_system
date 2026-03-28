@@ -18,7 +18,7 @@ protected:
 };
 
 TEST_F(OrderManagementSystemTest, CreateAndGetOrder) {
-  auto order_id = oms.create_order(0, 150, 100, databento::Side::Bid);
+  auto order_id = oms.create_order(0, 150, 100, databento::Side::Bid).first;
   EXPECT_EQ(order_id, 0);
 
   const auto &order = oms.get_order(order_id);
@@ -31,7 +31,7 @@ TEST_F(OrderManagementSystemTest, CreateAndGetOrder) {
 }
 
 TEST_F(OrderManagementSystemTest, AckOrder) {
-  auto order_id = oms.create_order(0, 150, 100, databento::Side::Bid);
+  auto order_id = oms.create_order(0, 150, 100, databento::Side::Bid).first;
   oms.ack_create_order(order_id);
 
   const auto &order = oms.get_order(order_id);
@@ -39,7 +39,7 @@ TEST_F(OrderManagementSystemTest, AckOrder) {
 }
 
 TEST_F(OrderManagementSystemTest, FillOrderPartial) {
-  auto order_id = oms.create_order(0, 150, 100, databento::Side::Bid);
+  auto order_id = oms.create_order(0, 150, 100, databento::Side::Bid).first;
   oms.ack_create_order(order_id);
   oms.ack_fill_order(order_id, 40, 150);
 
@@ -50,7 +50,7 @@ TEST_F(OrderManagementSystemTest, FillOrderPartial) {
 }
 
 TEST_F(OrderManagementSystemTest, FillOrderComplete) {
-  auto order_id = oms.create_order(0, 150, 100, databento::Side::Bid);
+  auto order_id = oms.create_order(0, 150, 100, databento::Side::Bid).first;
   oms.ack_create_order(order_id);
   oms.ack_fill_order(order_id, 100, 150);
 
@@ -60,13 +60,13 @@ TEST_F(OrderManagementSystemTest, FillOrderComplete) {
 }
 
 TEST_F(OrderManagementSystemTest, FillOrderThrowsOnOverfill) {
-  auto order_id = oms.create_order(0, 150, 100, databento::Side::Bid);
+  auto order_id = oms.create_order(0, 150, 100, databento::Side::Bid).first;
   oms.ack_create_order(order_id);
   EXPECT_THROW(oms.ack_fill_order(order_id, 150, 150), std::runtime_error);
 }
 
 TEST_F(OrderManagementSystemTest, CancelOrder) {
-  auto order_id = oms.create_order(0, 150, 100, databento::Side::Bid);
+  auto order_id = oms.create_order(0, 150, 100, databento::Side::Bid).first;
   oms.cancel_order(0, order_id);
   oms.ack_cancel_order(order_id);
 
@@ -75,7 +75,7 @@ TEST_F(OrderManagementSystemTest, CancelOrder) {
 }
 
 TEST_F(OrderManagementSystemTest, CancelThrowsOnAlreadyFilled) {
-  auto order_id = oms.create_order(0, 150, 100, databento::Side::Bid);
+  auto order_id = oms.create_order(0, 150, 100, databento::Side::Bid).first;
   oms.ack_create_order(order_id);
   oms.ack_fill_order(order_id, 100, 150);
 

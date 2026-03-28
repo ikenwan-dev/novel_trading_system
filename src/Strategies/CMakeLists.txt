@@ -11,3 +11,6 @@ add_library(MBOStrategies INTERFACE
 
 target_link_libraries(MBOStrategies INTERFACE LimitOrderBook databento::databento OrderManagementSystem)
 
+add_library(MarketMaker MBOStrategies/MarketMaker/MarketMaker.cpp)
+target_link_libraries(MarketMaker PUBLIC MBOStrategies)
+target_include_directories(MarketMaker PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..)
