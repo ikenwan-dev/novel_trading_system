@@ -17,6 +17,8 @@ public:
     void impl_on_order_canceled(uint64_t order_id);
     void impl_on_order_filled(uint64_t order_id, uint64_t filled_qty, int64_t price);
 
+    int64_t get_position() const { return current_position_; }
+
 private:
     void cancel_active_orders(int64_t timestamp_ns);
 

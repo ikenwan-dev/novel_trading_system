@@ -4,9 +4,11 @@
 #include <stdexcept>
 
 namespace backtesting_engine::mbo {
-OrderManagementSystem::OrderManagementSystem(NetworkSimulator &simulator, MBORiskManager &risk_manager,
+OrderManagementSystem::OrderManagementSystem(NetworkSimulator &simulator,
+                                             MBORiskManager &risk_manager,
                                              std::size_t max_orders)
-    : simulator_(simulator), risk_manager_(risk_manager), max_orders_(max_orders) {
+    : simulator_(simulator), risk_manager_(risk_manager),
+      max_orders_(max_orders) {
   // Initialize orders vector
   orders_.resize(max_orders);
 }
@@ -64,7 +66,8 @@ void OrderManagementSystem::ack_fill_order(OrderID order_id,
 
   OMSOrder &order = orders_[order_id];
   if (order.status != OMSOrderStatus::LIVE &&
-      order.status != OMSOrderStatus::PARTIALLY_FILLED) {
+      order.status != OMSOrderStatus::PARTIALLY_FILLED &&
+      order.status != OMSOrderStatus::PENDING_CANCEL) {
     throw std::runtime_error("Order is not live or partially filled");
   }
 
@@ -89,7 +92,6 @@ void OrderManagementSystem::ack_fill_order(OrderID order_id,
   }
 
   risk_manager_.on_fill(order.side, filled_qty, price);
-  // Notify strategy
 }
 
 void OrderManagementSystem::cancel_order(uint64_t timestamp_ns,
@@ -101,11 +103,11 @@ void OrderManagementSystem::cancel_order(uint64_t timestamp_ns,
   if (order.status == OMSOrderStatus::FILLED ||
       order.status == OMSOrderStatus::PENDING_CANCEL ||
       order.status == OMSOrderStatus::CANCELLED) {
-    throw std::runtime_error(
-        "Order is already filled, pending cancel, or cancelled");
+    // Ignore: Race condition where we try to cancel an order that was just
+    // filled or already cancelled while the command was in flight.
+    return;
   }
   order.status = OMSOrderStatus::PENDING_CANCEL;
-  // notify strategy
   simulator_.send_outbound_event(
       {timestamp_ns, CancelOrderEvent{order.order_id}});
 }
@@ -114,7 +116,9 @@ void OrderManagementSystem::ack_cancel_order(OrderID order_id) {
   if (order_id >= next_order_id_) {
     throw std::runtime_error("Invalid order id");
   }
-  orders_[order_id].status = OMSOrderStatus::CANCELLED;
+  if (orders_[order_id].status != OMSOrderStatus::FILLED) {
+    orders_[order_id].status = OMSOrderStatus::CANCELLED;
+  }
 }
 
 const OrderManagementSystem::OMSOrder &

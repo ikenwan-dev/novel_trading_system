@@ -23,6 +23,9 @@ public:
     event_queue.push(std::move(event));
   }
 
+  EventQueue& get_event_queue() { return event_queue; }
+  const EventQueue& get_event_queue() const { return event_queue; }
+
   void send_inbound_event(EventV2 event) {
     event.timestamp_ns += inbound_latency;
     event_queue.push(std::move(event));

@@ -18,6 +18,7 @@ void DataBentoProducer::produce() {
       while (!writer_.push(mbo_msg)) {
       }
     }
+    break;
   }
   writer_.push(databento::MboMsg{}); // signal end of data
 }

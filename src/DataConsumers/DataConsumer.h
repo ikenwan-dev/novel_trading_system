@@ -1,10 +1,12 @@
 #pragma once
 
 
+#include <databento/historical.hpp>
+
 namespace backtesting_engine::mbo {
 class DataConsumer {
 public:
-  virtual void consume() = 0;
+  virtual bool try_poll(databento::MboMsg &out_msg) = 0;
   virtual ~DataConsumer() = default;
 
   DataConsumer(const DataConsumer &) = delete;

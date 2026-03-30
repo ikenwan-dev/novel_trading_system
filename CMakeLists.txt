@@ -15,8 +15,13 @@ add_subdirectory(tests)
 
 add_executable(producer src/producer.cpp)
 target_link_libraries(producer PRIVATE DataProducer)
-add_executable(MainMboEventLoop src/consumer.cpp)
-target_link_libraries(MainMboEventLoop PRIVATE DataConsumer MboEvents NetworkSimulator)
+
+add_executable(LobScript src/consumer.cpp)
+target_link_libraries(LobScript PRIVATE DataConsumer MboEvents NetworkSimulator)
+
+add_executable(MainMboEventLoop src/MBOMain.cpp)
+target_link_libraries(MainMboEventLoop PRIVATE DataConsumer MboEvents NetworkSimulator MBOStrategies LimitOrderBook OrderManagementSystem VirtualExchange RiskManager MarketMaker)
+
 add_executable(MainBarEventLoop src/main.cpp)
 
 target_link_libraries(MainBarEventLoop PRIVATE 

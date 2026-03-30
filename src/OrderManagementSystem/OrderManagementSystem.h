@@ -13,7 +13,8 @@ class OrderManagementSystem {
   using OrderID = uint64_t;
 
 public:
-  OrderManagementSystem(NetworkSimulator &simulator, MBORiskManager& risk_manager, std::size_t max_orders);
+  OrderManagementSystem(NetworkSimulator &simulator,
+                        MBORiskManager &risk_manager, std::size_t max_orders);
 
   enum class OMSOrderStatus {
     PENDING,
@@ -34,13 +35,16 @@ public:
     databento::Side side;
     OMSOrderStatus status;
   };
-  std::pair<OrderID, RiskResult> create_order(uint64_t timestamp_ns, int64_t price, uint64_t qty,
-                       databento::Side side);
+  std::pair<OrderID, RiskResult> create_order(uint64_t timestamp_ns,
+                                              int64_t price, uint64_t qty,
+                                              databento::Side side);
   void ack_create_order(OrderID order_id);
   void ack_fill_order(OrderID order_id, uint64_t filled_qty, int64_t price);
   void cancel_order(uint64_t timestamp_ns, OrderID order_id);
   void ack_cancel_order(OrderID order_id);
   const OMSOrder &get_order(OrderID order_id) const;
+  int64_t get_holdings() const { return holdings_; }
+  int64_t get_cash() const { return cash_; }
 
 private:
   std::size_t max_orders_;

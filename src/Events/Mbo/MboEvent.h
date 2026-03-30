@@ -37,16 +37,26 @@ using EventPayload =
     std::variant<CreateOrderEvent, AckCreateOrderEvent, CancelOrderEvent,
                  AckCancelOrderEvent, AckFillOrderEvent>;
 
+inline uint64_t get_next_sequence_number() {
+  static uint64_t seq = 0;
+  return ++seq;
+}
+
 struct EventV2 {
   uint64_t timestamp_ns; // The exact time this event occurs(nanoseconds since
                          // unix epoch)
   EventPayload payload;  // The actual event data
+  uint64_t sequence_number = get_next_sequence_number();
 };
 
 // Comparator that makes the priority queue act as a Min-Heap (earliest time
 // first)
 struct EventCompare {
   bool operator()(const EventV2 &a, const EventV2 &b) const {
+    if (a.timestamp_ns == b.timestamp_ns) {
+      // Return true if 'a' should be ordered AFTER 'b' (higher sequence number means later)
+      return a.sequence_number > b.sequence_number;
+    }
     // Return true if 'a' should be ordered AFTER 'b'
     return a.timestamp_ns > b.timestamp_ns;
   }

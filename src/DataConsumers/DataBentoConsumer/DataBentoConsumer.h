@@ -21,7 +21,7 @@ public:
   DataBentoConsumer(DataBentoConsumer &&) = delete;
   DataBentoConsumer &operator=(DataBentoConsumer &&) = delete;
 
-  void consume() override;
+  bool try_poll(databento::MboMsg &out_msg);
 
 private:
   Interactor &reader_;

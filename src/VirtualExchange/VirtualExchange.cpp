@@ -45,7 +45,15 @@ void VirtualExchange::on_create_order(uint64_t timestamp_ns,
 
 void VirtualExchange::on_cancel_order(uint64_t timestamp_ns,
                                       const CancelOrderEvent &event) {
-  auto order_metadata_it = get_order_metadata(event.order_id);
+  auto order_metadata_it = order_metadata_.find(event.order_id);
+  if (order_metadata_it == order_metadata_.end()) {
+      // Race condition: Order was already completely filled in the matching engine, 
+      // but the strategy hasn't received the AckFill due to latency, so it tried to cancel it.
+      // We safely ignore this "too late to cancel" request.
+      simulator_.send_inbound_event(
+          {timestamp_ns, AckCancelOrderEvent{event.order_id}}); // Ideally a CancelReject, but we map to AckCancel to let OMS clean it up gracefully if it wants.
+      return;
+  }
   int64_t price = order_metadata_it->second.price;
   VirtualPriceLevels &levels = get_side(order_metadata_it->second.side);
   VirtualPriceLevel &level = get_price_level(levels, price)->second;

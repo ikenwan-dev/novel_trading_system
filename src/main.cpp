@@ -8,7 +8,7 @@
 #include "Strategies/BarStrategies/Strategy.h"
 #include "Strategies/BarStrategies/StrategyConfig.h"
 #include "ThreadSafeQueue/ThreadSafeQueue.h"
-#include "glaze/json/read.hpp"
+#include <glaze/glaze.hpp>
 #include <fstream>
 #include <iomanip> // std::put_time
 #include <iostream>
