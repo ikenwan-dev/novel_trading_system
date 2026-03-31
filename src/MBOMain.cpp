@@ -70,6 +70,19 @@ int main() {
     std::cout << "OrderManagement System cash: $" << std::fixed
               << std::setprecision(2)
               << static_cast<double>(oms.get_cash()) / 1e9 << std::endl;
+    
+    // Print true Mark-To-Market Equity
+    int64_t last_mid = strategy.get_last_valid_mid_price();
+    if (last_mid != 0) {
+      double mtm_equity = static_cast<double>(oms.get_mtm_equity(last_mid)) / 1e9;
+      std::cout << "OrderManagement System MTM Equity: $" << std::fixed
+                << std::setprecision(2) << mtm_equity << " (based on last valid mid: $"
+                << static_cast<double>(last_mid) / 1e9 << ")" << std::endl;
+    } else {
+      std::cout << "OrderManagement System MTM Equity: N/A (no valid mid price recorded)" << std::endl;
+    }
+
+    oms.print_order_status_counts();
 
     reader.unlink();
 

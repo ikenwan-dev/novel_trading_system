@@ -39,6 +39,17 @@ uint64_t DataBentoLOB::get_level_qty(databento::Side side,
   return 0; // Price level does not exist
 }
 
+uint64_t DataBentoLOB::get_total_volume() const {
+  uint64_t total = 0;
+  for (const auto &[price, level] : bids_) {
+    total += level.total_qty;
+  }
+  for (const auto &[price, level] : asks_) {
+    total += level.total_qty;
+  }
+  return total;
+}
+
 void DataBentoLOB::add_order(const databento::MboMsg &msg) {
   if (orders_.find(msg.order_id) != orders_.end()) {
     throw std::runtime_error{"Order already exists"};

@@ -16,7 +16,8 @@ public:
   OrderManagementSystem(NetworkSimulator &simulator,
                         MBORiskManager &risk_manager, std::size_t max_orders);
 
-  enum class OMSOrderStatus {
+  enum class OMSOrderStatus : uint8_t {
+    UNKNOWN = 0,
     PENDING,
     LIVE,
     PARTIALLY_FILLED,
@@ -24,16 +25,15 @@ public:
     PENDING_CANCEL,
     CANCELLED,
     REJECTED,
-    EXPIRED,
-    UNKNOWN
+    EXPIRED
   };
   struct OMSOrder {
-    uint64_t order_id;
-    int64_t price;
-    uint64_t qty;
-    uint64_t filled_qty;
-    databento::Side side;
-    OMSOrderStatus status;
+    uint64_t order_id{0};
+    int64_t price{0};
+    uint64_t qty{0};
+    uint64_t filled_qty{0};
+    databento::Side side{databento::Side::None};
+    OMSOrderStatus status{OMSOrderStatus::UNKNOWN};
   };
   std::pair<OrderID, RiskResult> create_order(uint64_t timestamp_ns,
                                               int64_t price, uint64_t qty,
@@ -45,6 +45,8 @@ public:
   const OMSOrder &get_order(OrderID order_id) const;
   int64_t get_holdings() const { return holdings_; }
   int64_t get_cash() const { return cash_; }
+  int64_t get_mtm_equity(int64_t current_mid_price) const;
+  void print_order_status_counts() const;
 
 private:
   std::size_t max_orders_;

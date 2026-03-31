@@ -1,6 +1,8 @@
 #include "OrderManagementSystem/OrderManagementSystem.h"
 #include "Events/Mbo/MboEvent.h"
 #include <cstdint>
+#include <iostream>
+#include <map>
 #include <stdexcept>
 
 namespace backtesting_engine::mbo {
@@ -127,6 +129,48 @@ OrderManagementSystem::get_order(OrderID order_id) const {
     throw std::runtime_error("Invalid order id");
   }
   return orders_[order_id];
+}
+
+int64_t OrderManagementSystem::get_mtm_equity(int64_t current_mid_price) const {
+  return cash_ + (holdings_ * current_mid_price);
+}
+
+void OrderManagementSystem::print_order_status_counts() const {
+  std::map<OMSOrderStatus, std::size_t> counts;
+  for (std::size_t i = 0; i < next_order_id_; ++i) {
+    counts[orders_[i].status]++;
+  }
+
+  auto to_string = [](OMSOrderStatus status) {
+    switch (status) {
+    case OMSOrderStatus::UNKNOWN:
+      return "UNKNOWN";
+    case OMSOrderStatus::PENDING:
+      return "PENDING";
+    case OMSOrderStatus::LIVE:
+      return "LIVE";
+    case OMSOrderStatus::PARTIALLY_FILLED:
+      return "PARTIALLY_FILLED";
+    case OMSOrderStatus::FILLED:
+      return "FILLED";
+    case OMSOrderStatus::PENDING_CANCEL:
+      return "PENDING_CANCEL";
+    case OMSOrderStatus::CANCELLED:
+      return "CANCELLED";
+    case OMSOrderStatus::REJECTED:
+      return "REJECTED";
+    case OMSOrderStatus::EXPIRED:
+      return "EXPIRED";
+    default:
+      return "INVALID";
+    }
+  };
+
+  std::cout << "\n--- OMS Order Status Counts ---\n";
+  for (const auto &[status, count] : counts) {
+    std::cout << to_string(status) << " : " << count << "\n";
+  }
+  std::cout << "-------------------------------\n";
 }
 
 } // namespace backtesting_engine::mbo

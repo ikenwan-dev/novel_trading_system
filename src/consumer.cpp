@@ -6,7 +6,10 @@
 #include "databento/enums.hpp"
 #include <algorithm>
 #include <databento/record.hpp>
+#include <deque>
 #include <map>
+#include <unordered_map>
+#include <vector>
 
 using namespace backtesting_engine;
 using namespace backtesting_engine::mbo;
@@ -29,7 +32,7 @@ int main() {
 
   databento::MboMsg msg;
   databento::MboMsg end_msg{};
-  get_next_msg(reader, msg);
+  // get_next_msg(reader, msg);
   bool has_more_messages = msg != end_msg;
 
   DataBentoLOB lob_;
@@ -46,6 +49,10 @@ int main() {
   long long num_trades = 0;
   long long num_fills = 0;
   long long out_of_order_trades = 0;
+
+  std::deque<uint64_t> last_15_orders;
+  std::unordered_map<uint64_t, std::vector<databento::MboMsg>> tracked_messages;
+
   std::cout << "Consuming...." << std::endl;
   auto start = std::chrono::high_resolution_clock::now();
   while (true) {
@@ -55,16 +62,24 @@ int main() {
       break;
     }
     action_counts[msg.action]++;
-    // if (msg.order_id) {
-    //   message_counts[msg.order_id]++;
-    // }
-    // if (msg.action == databento::action::Fill && num_fills < 10) {
-    //   fill_messages.push_back(msg);
-    //   num_fills++;
-    // } else if (msg.action == databento::action::Trade && num_trades < 10) {
-    //   trade_messages.push_back(msg);
-    //   num_trades++;
-    // }
+
+    if (msg.action == databento::Action::Add) {
+      if (tracked_messages.find(msg.order_id) == tracked_messages.end()) {
+        last_15_orders.push_back(msg.order_id);
+        tracked_messages[msg.order_id] = std::vector<databento::MboMsg>(); // Initialize empty vector
+        
+        if (last_15_orders.size() > 15) {
+          uint64_t oldest = last_15_orders.front();
+          last_15_orders.pop_front();
+          tracked_messages.erase(oldest);
+        }
+      }
+    }
+
+    if (tracked_messages.find(msg.order_id) != tracked_messages.end()) {
+      tracked_messages[msg.order_id].push_back(msg);
+    }
+
     lob_.update_book(msg);
     num_messages++;
   }
@@ -74,20 +89,23 @@ int main() {
       [](const auto &a, const auto &b) { return a.second < b.second; });
 
   for (const auto &action : action_counts) {
-    std::cout << action.first << " : " << action.second << std::endl;
+    std::cout << (char)action.first << " : " << action.second << std::endl;
   }
-  // std::cout << "order with most messages: " << max_it->first << " with "
-  //           << max_it->second << " messages" << std::endl;
-  // for (const auto &trade : trade_messages) {
-  //   std::cout << trade << std::endl;
-  // }
-  // for (const auto &fill : fill_messages) {
-  //   std::cout << fill << std::endl;
-  // }
+
+  std::cout << "\n--- Last 15 Created Orders and their Messages ---"
+            << std::endl;
+  for (uint64_t order_id : last_15_orders) {
+    std::cout << "Order ID: " << order_id << std::endl;
+    for (const auto &m : tracked_messages[order_id]) {
+      std::cout << "  " << m << std::endl;
+    }
+  }
+  std::cout << "-----------------------------------------------" << std::endl;
   ////// test code end
 
   std::cout << "lob bbo: " << lob_.get_bbo().first << " @ "
             << lob_.get_bbo().second << std::endl;
+  std::cout << "Total Volume in LOB: " << lob_.get_total_volume() << std::endl;
   std::cout << "Consumed " << num_messages << " messages" << std::endl;
   std::chrono::duration<double> diff = end - start;
   double seconds = diff.count();

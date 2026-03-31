@@ -18,7 +18,7 @@ public:
     void impl_on_order_filled(uint64_t order_id, uint64_t filled_qty, int64_t price);
 
     int64_t get_position() const { return current_position_; }
-
+    int64_t get_last_valid_mid_price() const { return last_valid_mid_price_; }
 private:
     void cancel_active_orders(int64_t timestamp_ns);
 
@@ -31,6 +31,7 @@ private:
     int64_t active_ask_price_{0};
 
     int64_t current_position_{0};
+    int64_t last_valid_mid_price_{0};
 };
 
 } // namespace backtesting_engine::mbo
