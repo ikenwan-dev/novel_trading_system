@@ -25,10 +25,16 @@ std::vector<std::string> get_dbn_files(const std::string &directory) {
   return files;
 }
 
-int main() {
-  std::string directory =
-      std::string(PROJECT_ROOT) + "/src/test_data/XNAS-20260120-7W93CD9NGT/";
-  std::vector<std::string> filepaths = get_dbn_files(directory);
+int main(int argc, char* argv[]) {
+  std::vector<std::string> filepaths;
+
+  if (argc > 1) {
+    filepaths.push_back(argv[1]);
+  } else {
+    std::string directory =
+        std::string(PROJECT_ROOT) + "/src/test_data/XNAS-20260120-7W93CD9NGT/";
+    filepaths = get_dbn_files(directory);
+  }
 
   DataBentoProducer::Interactor writer("test_shm");
   DataBentoProducer dataBentoProducer(filepaths, writer);

@@ -74,12 +74,13 @@ TEST_F(OrderManagementSystemTest, CancelOrder) {
   EXPECT_EQ(order.status, OrderManagementSystem::OMSOrderStatus::CANCELLED);
 }
 
-TEST_F(OrderManagementSystemTest, CancelThrowsOnAlreadyFilled) {
+TEST_F(OrderManagementSystemTest, CancelIgnoresOnAlreadyFilled) {
   auto order_id = oms.create_order(0, 150, 100, databento::Side::Bid).first;
   oms.ack_create_order(order_id);
   oms.ack_fill_order(order_id, 100, 150);
 
-  EXPECT_THROW(oms.cancel_order(0, order_id), std::runtime_error);
+  EXPECT_NO_THROW(oms.cancel_order(0, order_id));
+  EXPECT_EQ(oms.get_order(order_id).status, OrderManagementSystem::OMSOrderStatus::FILLED);
 }
 
 TEST_F(OrderManagementSystemTest, MaxOrdersCapacityThrows) {
