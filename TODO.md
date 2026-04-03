@@ -33,14 +33,36 @@ In `MarketMaker.h`, you use `std::optional<uint64_t> active_bid_id_;`. `std::opt
 **The HFT Solution:**
 Memory alignment matters when trying to fit strategy state into a 64-byte L1 Cache Line. Use a sentinel/magic value instead (e.g., `constexpr uint64_t NO_ORDER = UINT64_MAX;`) to avoid relying on `std::optional` bloat.
 
+## 5. Virtual Function Pass-Through in the Core Spin Loop (Critical Severity)
+**The Problem:**
+In `MBOSimulationEngine.h`, you take `DataConsumer& consumer_` by reference and call `consumer_.try_poll(msg)` inside the absolute tightest `while` spin loop of your matching engine. Because `DataConsumer::try_poll` is a `virtual` function, every single tick evaluated requires an indirect vtable pointer dereference. This breaks your ability to aggressively pipeline instructions and defeats the L1 instruction cache entirely. It is a paradox because you successfully used CRTP/Templates for `strategy_`, but left the `consumer_` dynamically dispatched!
+
+**The HFT Solution:**
+Turn `MBOSimulationEngine` into a multi-templated class `template <typename Strategy, typename DataConsumerT>`. Pass the consumer in as a static template argument. This statically binds the data feed loop, allowing the compiler to violently inline `try_poll` right into the spin loop.
+
+## 6. `std::priority_queue` over `std::vector` inside the Core Engine (High Severity)
+**The Problem:**
+Your `EventQueue` in `MboEvent.h` uses a `std::priority_queue<EventV2, std::vector<EventV2>>`. If there is a spike in events, the underlying `std::vector` will dynamically resize (`malloc`/`new`), incurring catastrophic OS-level allocation stalls in the middle of a simulation tick. Furthermore, traversing the standard binary heap is $O(\log N)$ and can cause poor cache utilization given the randomly distributed index hops.
+
+**The HFT Solution:**
+Replace the vector-backed priority queue with a Fixed-Size Calendar Queue or a pre-allocated statically sized Intrusive Binary Heap structure guaranteeing zero allocations.
+
+## 7. Deep Struct Memory Comparison (Medium Severity)
+**The Problem:**
+Inside `MBOSimulationEngine::run()`, the guard expression `if (msg == databento::MboMsg{})` compares an entire populated mult-byte massruct block sequentially just to define the end-of-stream condition.
+
+**The HFT Solution:**
+Avoid deep memory comparisons in hot paths. Re-design `try_poll` to return an explicit 1-byte state machine marker (e.g., `enum class PollStatus { DATA_READY, NO_DATA, END_OF_STREAM };`).
+
 ## Praise: Static Polymorphism Engine (`MBOSimulationEngine.h`)
 Using CRTP/Templates for the core simulation engine (`template <typename Strategy> class MBOSimulationEngine`) instead of abstract virtual base classes (`VirtualStrategy*`) was an absolutely elite architectural decision. You single-handedly avoided Virtual Table (`vptr`) lookups for every tick of your matching engine, allowing the compiler to aggressively inline your strategy code. This perfectly fits the HFT profile.
 
-## 5. Strategic Focus for Resume/Interviews (Prioritization)
+## 8. Strategic Focus for Resume/Interviews (Prioritization)
 **The Problem:** 
 Candidates often misallocate their time by attempting to build hyper-complex, heavily-overfitted alpha strategies to impress interviewers. For a strictly C++ Software Engineering / Quant Developer role, firms actively ignore the profitability of your paper-trading strategy.
 **The HFT Solution (What you should actually focus on):**
 - **Zero-Allocation Hot Path:** Audit the codebase sequentially. If `DataBentoLOB::update_book` or `MarketMaker::impl_on_book_update` ever call `new`, `malloc`, or trigger a dynamic container resize, replace them with pre-allocated structures.
 - **Lock-Free Logging:** Scrap `std::cout`. Synchronous printing blocks the execution thread. Implement a Single-Producer Single-Consumer (SPSC) ring buffer to asynchronously flush logs via a background thread pinned to a separate CPU core.
 - **Latency Benchmarking:** Elite firms want to see that you measure micro-architecture performance. Instrument your code with hardware timestamp counters (`__rdtsc()`), measure "Tick-to-Trade" latency, and generate nanosecond histograms emphasizing tail latencies (p50, p90, p99, p99.9).
+- **CPU Thread Affinity & Cache Isolation (Linux):** On a Linux deployment, pin the main trading thread to a specific CPU core using `pthread_setaffinity_np`. Furthermore, use the Linux kernel parameter `isolcpus` on boot to physically prevent the OS scheduler from migrating background tasks to your trading core. This guarantees your L1/L2 Cache never gets flushed by a context switch, effectively neutralizing p99 tail latency spikes caused by memory fetch delays.
 - **The README (Your Engineering Whitepaper):** Your README must include an architecture IPC diagram, make explicitly clear your low-latency design tradeoffs, showcase your latency benchmarks, and provide CI/CD testing guarantees perfectly matching feed state.
