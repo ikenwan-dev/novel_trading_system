@@ -12,7 +12,7 @@ void DataBentoProducer::produce() {
   std::cout << "Producing...\n";
   for (const auto &filepath : mbo_filepaths_) {
     std::cout << "Producing from " << filepath << "\n";
-    databento::DbnFileStore dbn_file_store(filepath);
+    databento::DbnStore dbn_file_store(filepath);
     while (const databento::Record *record = dbn_file_store.NextRecord()) {
       const auto &mbo_msg = record->Get<databento::MboMsg>();
       while (!writer_.push(mbo_msg)) {
