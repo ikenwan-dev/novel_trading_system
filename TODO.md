@@ -35,3 +35,12 @@ Memory alignment matters when trying to fit strategy state into a 64-byte L1 Cac
 
 ## Praise: Static Polymorphism Engine (`MBOSimulationEngine.h`)
 Using CRTP/Templates for the core simulation engine (`template <typename Strategy> class MBOSimulationEngine`) instead of abstract virtual base classes (`VirtualStrategy*`) was an absolutely elite architectural decision. You single-handedly avoided Virtual Table (`vptr`) lookups for every tick of your matching engine, allowing the compiler to aggressively inline your strategy code. This perfectly fits the HFT profile.
+
+## 5. Strategic Focus for Resume/Interviews (Prioritization)
+**The Problem:** 
+Candidates often misallocate their time by attempting to build hyper-complex, heavily-overfitted alpha strategies to impress interviewers. For a strictly C++ Software Engineering / Quant Developer role, firms actively ignore the profitability of your paper-trading strategy.
+**The HFT Solution (What you should actually focus on):**
+- **Zero-Allocation Hot Path:** Audit the codebase sequentially. If `DataBentoLOB::update_book` or `MarketMaker::impl_on_book_update` ever call `new`, `malloc`, or trigger a dynamic container resize, replace them with pre-allocated structures.
+- **Lock-Free Logging:** Scrap `std::cout`. Synchronous printing blocks the execution thread. Implement a Single-Producer Single-Consumer (SPSC) ring buffer to asynchronously flush logs via a background thread pinned to a separate CPU core.
+- **Latency Benchmarking:** Elite firms want to see that you measure micro-architecture performance. Instrument your code with hardware timestamp counters (`__rdtsc()`), measure "Tick-to-Trade" latency, and generate nanosecond histograms emphasizing tail latencies (p50, p90, p99, p99.9).
+- **The README (Your Engineering Whitepaper):** Your README must include an architecture IPC diagram, make explicitly clear your low-latency design tradeoffs, showcase your latency benchmarks, and provide CI/CD testing guarantees perfectly matching feed state.
