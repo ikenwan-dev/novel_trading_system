@@ -20,7 +20,7 @@ add_executable(LobScript src/consumer.cpp)
 target_link_libraries(LobScript PRIVATE DataConsumer MboEvents NetworkSimulator)
 
 add_executable(MainMboEventLoop src/MBOMain.cpp)
-target_link_libraries(MainMboEventLoop PRIVATE DataConsumer MboEvents NetworkSimulator MBOStrategies LimitOrderBook OrderManagementSystem VirtualExchange RiskManager MarketMaker)
+target_link_libraries(MainMboEventLoop PRIVATE DataConsumer MboEvents NetworkSimulator MBOStrategies LimitOrderBook OrderManagementSystem VirtualExchange RiskManager MarketMaker Performance)
 
 add_executable(MainBarEventLoop src/main.cpp)
 

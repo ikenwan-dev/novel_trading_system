@@ -4,6 +4,8 @@
 #include "LimitOrderBook/DataBentoLOB/DataBentoLOB.h"
 #include "NetworkSimulator/NetworkSimulator.h"
 #include "OrderManagementSystem/OrderManagementSystem.h"
+#include "Performance/LatencyProfiler.h"
+#include "Performance/TSC_Clock.h"
 #include "RiskManager/Mbo/MBORiskManager.h"
 #include "Strategies/MBOStrategies/MarketMaker/MarketMaker.h"
 #include <chrono>
@@ -40,16 +42,21 @@ int main() {
     // 4. Virtual Exchange
     VirtualExchange virtual_exchange(simulator, lob);
 
-    // 5. Strategy (Market Maker)
-    // For example, half_spread_ticks = 5, order_qty = 10
-    MarketMaker strategy(oms, 5, 10);
+    // 5. Performance Profiler
+    performance::TSC_Clock::calibrate();
+    performance::LatencyProfiler profiler;
 
-    // 6. Data Consumer wrapper
+    // 6. Strategy (Market Maker)
+    // For example, half_spread_ticks = 5, order_qty = 10
+    MarketMaker strategy(oms, 5, 10, &profiler);
+
+    // 7. Data Consumer wrapper
     DataBentoConsumer data_consumer(reader);
 
-    // 7. Simulation Engine
-    MBOSimulationEngine<MarketMaker> engine(
-        data_consumer, simulator, virtual_exchange, lob, oms, strategy);
+    // 8. Simulation Engine
+    MBOSimulationEngine<MarketMaker> engine(data_consumer, simulator,
+                                            virtual_exchange, lob, oms,
+                                            strategy, profiler);
 
     std::cout << "Starting Simulation Engine..." << std::endl;
     auto start = std::chrono::high_resolution_clock::now();
@@ -61,28 +68,15 @@ int main() {
 
     std::cout << "Simulation completed in " << diff.count() << " seconds."
               << std::endl;
-    std::cout << "Final LOB BBO: " << lob.get_bbo().first << " @ "
-              << lob.get_bbo().second << std::endl;
+    std::pair<int64_t, int64_t> bbo = lob.get_bbo();
+    std::cout << "Final LOB BBO: $" << std::fixed << std::setprecision(2)
+              << static_cast<double>(bbo.first) / 1e9 << " @ $"
+              << static_cast<double>(bbo.second) / 1e9 << std::endl;
     std::cout << "Final Portfolio Holdings inside Strategy: "
               << strategy.get_position() << std::endl;
-    std::cout << "OrderManagement System holdings: " << oms.get_holdings()
-              << std::endl;
-    std::cout << "OrderManagement System cash: $" << std::fixed
-              << std::setprecision(2)
-              << static_cast<double>(oms.get_cash()) / 1e9 << std::endl;
-    
-    // Print true Mark-To-Market Equity
-    int64_t last_mid = strategy.get_last_valid_mid_price();
-    if (last_mid != 0) {
-      double mtm_equity = static_cast<double>(oms.get_mtm_equity(last_mid)) / 1e9;
-      std::cout << "OrderManagement System MTM Equity: $" << std::fixed
-                << std::setprecision(2) << mtm_equity << " (based on last valid mid: $"
-                << static_cast<double>(last_mid) / 1e9 << ")" << std::endl;
-    } else {
-      std::cout << "OrderManagement System MTM Equity: N/A (no valid mid price recorded)" << std::endl;
-    }
-
-    oms.print_order_status_counts();
+    oms.print_summary(strategy.get_last_valid_mid_price());
+    profiler.print_histograms(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(diff).count());
 
     reader.unlink();
 

@@ -1,13 +1,14 @@
 #pragma once
 
 #include "Strategies/MBOStrategies/MBOStrategyBase.h"
+#include "Performance/LatencyProfiler.h"
 #include <optional>
 
 namespace backtesting_engine::mbo {
 
 class MarketMaker : public MBOStrategyBase<MarketMaker> {
 public:
-    MarketMaker(OrderManagementSystem &oms, int64_t half_spread_ticks, uint64_t order_qty);
+    MarketMaker(OrderManagementSystem &oms, int64_t half_spread_ticks, uint64_t order_qty, performance::LatencyProfiler *profiler = nullptr);
 
     void impl_on_book_update(int64_t timestamp_ns, const DataBentoLOB &lob);
     void impl_on_fill(const databento::MboMsg &order);

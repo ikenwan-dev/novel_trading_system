@@ -46,7 +46,7 @@ public:
   int64_t get_holdings() const { return holdings_; }
   int64_t get_cash() const { return cash_; }
   int64_t get_mtm_equity(int64_t current_mid_price) const;
-  void print_order_status_counts() const;
+  void print_summary(int64_t current_mid_price) const;
 
 private:
   std::size_t max_orders_;

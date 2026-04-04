@@ -3,8 +3,8 @@
 namespace backtesting_engine::mbo {
 
 MarketMaker::MarketMaker(OrderManagementSystem &oms, int64_t half_spread_ticks,
-                         uint64_t order_qty)
-    : MBOStrategyBase<MarketMaker>(oms), half_spread_ticks_(half_spread_ticks),
+                         uint64_t order_qty, performance::LatencyProfiler *profiler)
+    : MBOStrategyBase<MarketMaker>(oms, profiler), half_spread_ticks_(half_spread_ticks),
       order_qty_(order_qty) {}
 
 void MarketMaker::impl_on_book_update(int64_t timestamp_ns,

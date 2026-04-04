@@ -2,6 +2,7 @@
 #include "Events/Mbo/MboEvent.h"
 #include <cstdint>
 #include <iostream>
+#include <iomanip>
 #include <map>
 #include <stdexcept>
 
@@ -135,7 +136,27 @@ int64_t OrderManagementSystem::get_mtm_equity(int64_t current_mid_price) const {
   return cash_ + (holdings_ * current_mid_price);
 }
 
-void OrderManagementSystem::print_order_status_counts() const {
+void OrderManagementSystem::print_summary(int64_t current_mid_price) const {
+  std::cout << "\n============================================\n";
+  std::cout << "         OMS TRADING SUMMARY                \n";
+  std::cout << "============================================\n";
+
+  std::cout << "[Portfolio]\n";
+  std::cout << "  Holdings:   " << holdings_ << "\n";
+  std::cout << "  Cash:       $" << std::fixed << std::setprecision(2)
+            << static_cast<double>(cash_) / 1e9 << "\n";
+
+  if (current_mid_price != 0) {
+    double mtm_equity = static_cast<double>(get_mtm_equity(current_mid_price)) / 1e9;
+    std::cout << "  MTM Equity: $" << std::fixed << std::setprecision(2)
+              << mtm_equity << " (based on mid: $" 
+              << static_cast<double>(current_mid_price) / 1e9 << ")\n";
+  } else {
+    std::cout << "  MTM Equity: N/A (no valid mid price recorded)\n";
+  }
+
+  std::cout << "\n[Order Status Counts]\n";
+
   std::map<OMSOrderStatus, std::size_t> counts;
   for (std::size_t i = 0; i < next_order_id_; ++i) {
     counts[orders_[i].status]++;
@@ -166,11 +187,11 @@ void OrderManagementSystem::print_order_status_counts() const {
     }
   };
 
-  std::cout << "\n--- OMS Order Status Counts ---\n";
   for (const auto &[status, count] : counts) {
-    std::cout << to_string(status) << " : " << count << "\n";
+    std::cout << "  " << std::left << std::setw(17) << to_string(status) 
+              << ": " << count << "\n";
   }
-  std::cout << "-------------------------------\n";
+  std::cout << "============================================\n";
 }
 
 } // namespace backtesting_engine::mbo

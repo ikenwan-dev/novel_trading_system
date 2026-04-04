@@ -4,6 +4,8 @@
 #include "LimitOrderBook/DataBentoLOB/DataBentoLOB.h"
 #include "NetworkSimulator/NetworkSimulator.h"
 #include "OrderManagementSystem/OrderManagementSystem.h"
+#include "Performance/LatencyProfiler.h"
+#include "Performance/TSC_Clock.h"
 #include "VirtualExchange/VirtualExchange.h"
 #include <cstdint>
 #include <databento/historical.hpp>
@@ -15,10 +17,11 @@ template <typename Strategy> class MBOSimulationEngine {
 public:
   MBOSimulationEngine(DataConsumer &consumer, NetworkSimulator &network_sim,
                       VirtualExchange &virtual_exchange, DataBentoLOB &lob,
-                      OrderManagementSystem &oms, Strategy &strategy)
+                      OrderManagementSystem &oms, Strategy &strategy,
+                      performance::LatencyProfiler &profiler)
       : consumer_(consumer), network_sim_(network_sim),
         virtual_exchange_(virtual_exchange), lob_(lob), oms_(oms),
-        strategy_(strategy), engine_time_ns_(0) {}
+        strategy_(strategy), profiler_(profiler), engine_time_ns_(0) {}
 
   void run();
 
@@ -31,6 +34,7 @@ private:
   DataBentoLOB &lob_;
   OrderManagementSystem &oms_;
   Strategy &strategy_;
+  performance::LatencyProfiler &profiler_;
   uint64_t engine_time_ns_;
 };
 
@@ -82,6 +86,7 @@ template <typename Strategy> void MBOSimulationEngine<Strategy>::run() {
         reading_feed = false; // End of stream
         continue;
       }
+      profiler_.increment_throughput_counter();
       next_feed_ts = msg.ts_recv.time_since_epoch().count();
     }
 
@@ -103,10 +108,17 @@ template <typename Strategy> void MBOSimulationEngine<Strategy>::run() {
       case databento::Action::Add:
       case databento::Action::Modify:
       case databento::Action::Cancel:
-      case databento::Action::Clear:
+      case databento::Action::Clear: {
+        uint64_t start_tsc = performance::get_tsc();
         lob_.update_book(msg);
-        strategy_.on_book_update(engine_time_ns_, lob_);
+        uint64_t end_tsc = performance::get_tsc();
+        profiler_.record_latency(
+            performance::Metric::LOB_UPDATE,
+            performance::TSC_Clock::tsc_to_nanoseconds(end_tsc - start_tsc));
+
+        strategy_.on_book_update(engine_time_ns_, start_tsc, lob_);
         break;
+      }
       case databento::Action::Fill:
         virtual_exchange_.on_fill(msg);
         break;
