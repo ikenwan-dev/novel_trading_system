@@ -1,5 +1,5 @@
 #include "Constants/Constants.h"
-#include "DataConsumers/DataBentoConsumer/DataBentoConsumer.h"
+#include "DataConsumers/DataBentoIPCConsumer/DataBentoIPCConsumer.h"
 #include "Events/Mbo/MBOSimulationEngine.h"
 #include "LimitOrderBook/DataBentoLOB/DataBentoLOB.h"
 #include "NetworkSimulator/NetworkSimulator.h"
@@ -19,7 +19,7 @@ using namespace backtesting_engine::mbo;
 int main() {
   try {
     std::cout << "Waiting for Producer to create SHM..." << std::endl;
-    DataBentoConsumer::Interactor reader("test_shm", false);
+    DataBentoIPCConsumer::Interactor reader("test_shm", false);
     while (!reader.is_initialized()) {
       // spin while producer creates shm
     }
@@ -34,10 +34,7 @@ int main() {
     DataBentoLOB lob;
 
     // 3. Risk & OMS
-    // Dummy max properties for testing
     MBORiskManager risk_manager(200, 1000);
-
-    // We instantiate OMS with max_orders
     OrderManagementSystem oms(simulator, risk_manager, 20000000);
 
     // 4. Performance Profilers
@@ -49,18 +46,16 @@ int main() {
     VirtualExchange virtual_exchange(simulator, lob, sim_profiler);
 
     // 6. Strategy (Market Maker)
-    // For example, half_spread_ticks = 5, order_qty = 10
     MarketMaker strategy(oms, 5, 10, &profiler);
 
     // 7. Data Consumer wrapper
-    DataBentoConsumer data_consumer(reader);
+    DataBentoIPCConsumer data_consumer(reader);
 
     // 8. Simulation Engine
-    MBOSimulationEngine engine(data_consumer, simulator,
-                               virtual_exchange, lob, oms,
-                               strategy, profiler);
+    MBOSimulationEngine engine(data_consumer, simulator, virtual_exchange, lob,
+                               oms, strategy, profiler);
 
-    std::cout << "Starting Simulation Engine..." << std::endl;
+    std::cout << "Starting Simulation Engine (IPC)..." << std::endl;
     auto start = std::chrono::high_resolution_clock::now();
 
     engine.run();

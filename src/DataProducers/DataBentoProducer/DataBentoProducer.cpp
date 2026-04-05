@@ -9,7 +9,6 @@ DataBentoProducer::DataBentoProducer(const std::vector<std::string> filepaths,
 }
 
 void DataBentoProducer::produce() {
-  std::cout << "Producing...\n";
   for (const auto &filepath : mbo_filepaths_) {
     std::cout << "Producing from " << filepath << "\n";
     databento::DbnStore dbn_file_store(filepath);

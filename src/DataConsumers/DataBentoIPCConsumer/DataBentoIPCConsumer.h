@@ -5,20 +5,19 @@
 #include "SharedMemory/IPCInteractor.h"
 #include <databento/historical.hpp>
 
-
 namespace backtesting_engine::mbo {
-class DataBentoConsumer {
+class DataBentoIPCConsumer {
 public:
   using Interactor =
       common::IPCInteractor<databento::MboMsg, Constants::RING_BUFFER_SIZE>;
 
-  DataBentoConsumer(Interactor &reader);
-  ~DataBentoConsumer() = default;
+  DataBentoIPCConsumer(Interactor &reader);
+  ~DataBentoIPCConsumer() = default;
 
-  DataBentoConsumer(const DataBentoConsumer &) = delete;
-  DataBentoConsumer &operator=(const DataBentoConsumer &) = delete;
-  DataBentoConsumer(DataBentoConsumer &&) = delete;
-  DataBentoConsumer &operator=(DataBentoConsumer &&) = delete;
+  DataBentoIPCConsumer(const DataBentoIPCConsumer &) = delete;
+  DataBentoIPCConsumer &operator=(const DataBentoIPCConsumer &) = delete;
+  DataBentoIPCConsumer(DataBentoIPCConsumer &&) = delete;
+  DataBentoIPCConsumer &operator=(DataBentoIPCConsumer &&) = delete;
 
   bool try_poll(databento::MboMsg &out_msg);
 

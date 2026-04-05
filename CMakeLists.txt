@@ -15,12 +15,18 @@ add_subdirectory(tests)
 
 add_executable(producer src/producer.cpp)
 target_link_libraries(producer PRIVATE DataProducer)
+target_compile_definitions(producer PRIVATE PROJECT_ROOT="${CMAKE_CURRENT_SOURCE_DIR}")
 
 add_executable(LobScript src/consumer.cpp)
 target_link_libraries(LobScript PRIVATE DataConsumer MboEvents NetworkSimulator)
 
-add_executable(MainMboEventLoop src/MBOMain.cpp)
-target_link_libraries(MainMboEventLoop PRIVATE DataConsumer MboEvents NetworkSimulator MBOStrategies LimitOrderBook OrderManagementSystem VirtualExchange RiskManager MarketMaker Performance)
+add_executable(IPCBackTestEngineExample src/IPCBackTestEngineExample.cpp)
+target_link_libraries(IPCBackTestEngineExample PRIVATE DataConsumer MboEvents NetworkSimulator MBOStrategies LimitOrderBook OrderManagementSystem VirtualExchange RiskManager MarketMaker Performance)
+target_compile_definitions(IPCBackTestEngineExample PRIVATE PROJECT_ROOT="${CMAKE_CURRENT_SOURCE_DIR}")
+
+add_executable(MappedBackTestEngineExample src/MappedBackTestEngineExample.cpp)
+target_link_libraries(MappedBackTestEngineExample PRIVATE DataConsumer MboEvents NetworkSimulator MBOStrategies LimitOrderBook OrderManagementSystem VirtualExchange RiskManager MarketMaker Performance)
+target_compile_definitions(MappedBackTestEngineExample PRIVATE PROJECT_ROOT="${CMAKE_CURRENT_SOURCE_DIR}")
 
 add_executable(MainBarEventLoop src/main.cpp)
 
@@ -36,5 +42,3 @@ target_link_libraries(MainBarEventLoop PRIVATE
     glaze::glaze
 )
 target_compile_definitions(MainBarEventLoop PRIVATE PROJECT_ROOT="${CMAKE_CURRENT_SOURCE_DIR}")
-target_compile_definitions(producer PRIVATE PROJECT_ROOT="${CMAKE_CURRENT_SOURCE_DIR}")
-target_compile_definitions(MainMboEventLoop PRIVATE PROJECT_ROOT="${CMAKE_CURRENT_SOURCE_DIR}")

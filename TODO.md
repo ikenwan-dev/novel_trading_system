@@ -66,3 +66,13 @@ Candidates often misallocate their time by attempting to build hyper-complex, he
 - **Latency Benchmarking:** Elite firms want to see that you measure micro-architecture performance. Instrument your code with hardware timestamp counters (`__rdtsc()`), measure "Tick-to-Trade" latency, and generate nanosecond histograms emphasizing tail latencies (p50, p90, p99, p99.9).
 - **CPU Thread Affinity & Cache Isolation (Linux):** On a Linux deployment, pin the main trading thread to a specific CPU core using `pthread_setaffinity_np`. Furthermore, use the Linux kernel parameter `isolcpus` on boot to physically prevent the OS scheduler from migrating background tasks to your trading core. This guarantees your L1/L2 Cache never gets flushed by a context switch, effectively neutralizing p99 tail latency spikes caused by memory fetch delays.
 - **The README (Your Engineering Whitepaper):** Your README must include an architecture IPC diagram, make explicitly clear your low-latency design tradeoffs, showcase your latency benchmarks, and provide CI/CD testing guarantees perfectly matching feed state.
+
+## 9. Advanced Quant & Market Making Metrics (Strategy Evaluation)
+**The Problem:**
+Standard retail metrics like Sharpe Ratio are "vanity metrics" in HFT. They assume normal distributions and fail to capture the microscopic risks of toxic flow and adverse selection.
+
+**The HFT Solution (Implement these to impress top-tier firms):**
+- **Mark-out Analysis (Adverse Selection):** For every fill, measure the mid-price movement at $t+1ms$, $t+10ms$, and $t+100ms$. If the price moves through you immediately, you are being "picked off" by informed flow.
+- **Inventory-Adjusted PnL:** Calculate your PnL while applying a penalty for the absolute size of your position. This rewards strategies that stay "flat" and punishes those that gamble on long-term directional moves.
+- **Skew Efficiency:** Track **Average Position vs. PnL**. This measures how effectively your quoting skew is attracting the "right" side of the market to flatten your book.
+- **Max Drawdown (MDD) & Recovery Factor:** High-frequency strategies live or die by their tail risk. Focusing on the speed of recovery after a drawdown is a key indicator of strategy robustness.
