@@ -15,7 +15,8 @@
 
 using namespace backtesting_engine;
 using namespace backtesting_engine::mbo;
-
+// This depends on a separate process creating the shared memory and writing to
+// it. Run DataBentoProducer first/after.
 int main() {
   try {
     std::cout << "Waiting for Producer to create SHM..." << std::endl;

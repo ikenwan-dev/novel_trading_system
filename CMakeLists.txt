@@ -13,12 +13,12 @@ add_subdirectory(third_party)
 add_subdirectory(src)
 add_subdirectory(tests)
 
-add_executable(producer src/producer.cpp)
-target_link_libraries(producer PRIVATE DataProducer)
-target_compile_definitions(producer PRIVATE PROJECT_ROOT="${CMAKE_CURRENT_SOURCE_DIR}")
-
 add_executable(LobScript src/consumer.cpp)
 target_link_libraries(LobScript PRIVATE DataConsumer MboEvents NetworkSimulator)
+
+add_executable(DataBentoProducer src/producer.cpp)
+target_link_libraries(DataBentoProducer PRIVATE DataProducer)
+target_compile_definitions(DataBentoProducer PRIVATE PROJECT_ROOT="${CMAKE_CURRENT_SOURCE_DIR}")
 
 add_executable(IPCBackTestEngineExample src/IPCBackTestEngineExample.cpp)
 target_link_libraries(IPCBackTestEngineExample PRIVATE DataConsumer MboEvents NetworkSimulator MBOStrategies LimitOrderBook OrderManagementSystem VirtualExchange RiskManager MarketMaker Performance)
