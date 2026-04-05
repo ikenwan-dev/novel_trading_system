@@ -1,8 +1,8 @@
 #include "LimitOrderBook/DataBentoLOB/DataBentoLOB.h"
 #include "OrderManagementSystem/OrderManagementSystem.h"
 #include "Performance/LatencyProfiler.h"
-#include "RiskManager/Mbo/RiskResult.h"
 #include "Performance/TSC_Clock.h"
+#include "RiskManager/Mbo/RiskResult.h"
 #include <databento/record.hpp>
 
 namespace backtesting_engine::mbo {
@@ -21,8 +21,6 @@ public:
   inline void on_book_update(int64_t timestamp_ns, uint64_t start_tsc,
                              const DataBentoLOB &lob) {
     current_start_tsc_ = start_tsc;
-    // Static cast delegates to the derived class at compile time.
-    // The compiler sees right through this and inlines the call.
     static_cast<Derived *>(this)->impl_on_book_update(timestamp_ns, lob);
   }
 
@@ -38,18 +36,21 @@ public:
     static_cast<Derived *>(this)->impl_on_order_canceled(order_id);
   }
 
-  inline void on_order_filled(uint64_t order_id, uint64_t filled_qty, int64_t price) {
-    static_cast<Derived *>(this)->impl_on_order_filled(order_id, filled_qty, price);
+  inline void on_order_filled(uint64_t order_id, uint64_t filled_qty,
+                              int64_t price) {
+    static_cast<Derived *>(this)->impl_on_order_filled(order_id, filled_qty,
+                                                       price);
   }
 
-  inline std::pair<uint64_t, RiskResult> send_order(uint64_t timestamp_ns, int64_t price, uint64_t qty,
-                         databento::Side side) {
+  inline std::pair<uint64_t, RiskResult> send_order(uint64_t timestamp_ns,
+                                                    int64_t price, uint64_t qty,
+                                                    databento::Side side) {
     auto res = oms_.create_order(timestamp_ns, price, qty, side);
     if (profiler_) {
-        uint64_t end_tsc = performance::get_tsc();
-        profiler_->record_latency(
-            performance::Metric::TICK_TO_TRADE,
-            performance::TSC_Clock::tsc_to_nanoseconds(end_tsc - current_start_tsc_));
+      uint64_t end_tsc = performance::get_tsc();
+      profiler_->record_latency(performance::Metric::TICK_TO_TRADE,
+                                performance::TSC_Clock::tsc_to_nanoseconds(
+                                    end_tsc - current_start_tsc_));
     }
     return res;
   }
@@ -57,10 +58,10 @@ public:
   inline void cancel_order(int64_t timestamp_ns, uint64_t order_id) {
     oms_.cancel_order(timestamp_ns, order_id);
     if (profiler_) {
-        uint64_t end_tsc = performance::get_tsc();
-        profiler_->record_latency(
-            performance::Metric::TICK_TO_TRADE,
-            performance::TSC_Clock::tsc_to_nanoseconds(end_tsc - current_start_tsc_));
+      uint64_t end_tsc = performance::get_tsc();
+      profiler_->record_latency(performance::Metric::TICK_TO_TRADE,
+                                performance::TSC_Clock::tsc_to_nanoseconds(
+                                    end_tsc - current_start_tsc_));
     }
   }
 };

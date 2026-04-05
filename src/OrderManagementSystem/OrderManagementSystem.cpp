@@ -1,8 +1,8 @@
 #include "OrderManagementSystem/OrderManagementSystem.h"
 #include "Events/Mbo/MboEvent.h"
 #include <cstdint>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 #include <map>
 #include <stdexcept>
 
@@ -147,9 +147,10 @@ void OrderManagementSystem::print_summary(int64_t current_mid_price) const {
             << static_cast<double>(cash_) / 1e9 << "\n";
 
   if (current_mid_price != 0) {
-    double mtm_equity = static_cast<double>(get_mtm_equity(current_mid_price)) / 1e9;
+    double mtm_equity =
+        static_cast<double>(get_mtm_equity(current_mid_price)) / 1e9;
     std::cout << "  MTM Equity: $" << std::fixed << std::setprecision(2)
-              << mtm_equity << " (based on mid: $" 
+              << mtm_equity << " (based on mid: $"
               << static_cast<double>(current_mid_price) / 1e9 << ")\n";
   } else {
     std::cout << "  MTM Equity: N/A (no valid mid price recorded)\n";
@@ -188,8 +189,8 @@ void OrderManagementSystem::print_summary(int64_t current_mid_price) const {
   };
 
   for (const auto &[status, count] : counts) {
-    std::cout << "  " << std::left << std::setw(17) << to_string(status) 
-              << ": " << count << "\n";
+    std::cout << "  " << std::left << std::setw(17) << to_string(status) << ": "
+              << count << "\n";
   }
   std::cout << "============================================\n";
 }
