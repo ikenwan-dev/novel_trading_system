@@ -9,6 +9,7 @@
 #include <deque>
 #include <map>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 using namespace backtesting_engine;
@@ -52,6 +53,7 @@ int main() {
 
   std::deque<uint64_t> last_15_orders;
   std::unordered_map<uint64_t, std::vector<databento::MboMsg>> tracked_messages;
+  std::unordered_set<uint64_t> total_unique_orders;
 
   std::cout << "Consuming...." << std::endl;
   auto start = std::chrono::high_resolution_clock::now();
@@ -61,6 +63,7 @@ int main() {
     if (msg == end_msg) {
       break;
     }
+    total_unique_orders.insert(msg.order_id);
     action_counts[msg.action]++;
 
     if (msg.action == databento::Action::Add) {
@@ -122,6 +125,8 @@ int main() {
     std::cout << "Throughput: " << (uint64_t)(num_messages / seconds)
               << " msg/s" << std::endl;
   }
+  std::cout << "Total unique order IDs: " << total_unique_orders.size()
+            << std::endl;
   reader.unlink();
   return 0;
 }

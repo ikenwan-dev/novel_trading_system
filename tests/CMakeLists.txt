@@ -1,4 +1,4 @@
-add_executable(run_tests main_test.cpp portfolio_test.cpp strategy_test.cpp DataBentoLOB_test.cpp OrderManagementSystem_test.cpp VirtualExchange_test.cpp)
+add_executable(run_tests main_test.cpp portfolio_test.cpp strategy_test.cpp DataBentoLOB_test.cpp OptimizedDataBentoLOB_test.cpp OrderManagementSystem_test.cpp VirtualExchange_test.cpp)
 target_link_libraries(run_tests PRIVATE gtest_main Portfolio BarStrategies LimitOrderBook OrderManagementSystem VirtualExchange)
 target_include_directories(run_tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../src)
 

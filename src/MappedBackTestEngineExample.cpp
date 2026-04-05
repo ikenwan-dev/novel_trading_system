@@ -2,6 +2,7 @@
 #include "DataConsumers/DataBentoMappedConsumer/DataBentoMappedConsumer.h"
 #include "Events/Mbo/MBOSimulationEngine.h"
 #include "LimitOrderBook/DataBentoLOB/DataBentoLOB.h"
+#include "LimitOrderBook/DataBentoLOB/OptimizedDataBentoLOB.h"
 #include "NetworkSimulator/NetworkSimulator.h"
 #include "OrderManagementSystem/OrderManagementSystem.h"
 #include "Performance/LatencyProfiler.h"
@@ -43,7 +44,8 @@ int main(int argc, char *argv[]) {
                                Constants::INBOUND_LATENCY);
 
     // 2. Data Structures
-    DataBentoLOB lob;
+    // DataBentoLOB lob;
+    OptimizedDataBentoLOB lob;
 
     // 3. Risk & OMS
     MBORiskManager risk_manager(200, 1000);
@@ -97,7 +99,8 @@ int main(int argc, char *argv[]) {
     std::cout << "           SIMULATION RUN SUMMARY           \n";
     std::cout << "============================================\n";
     std::cout << std::left << std::setw(25) << "  Duration:" << std::fixed
-              << std::setprecision(4) << diff.count() << " seconds" << std::endl;
+              << std::setprecision(4) << diff.count() << " seconds"
+              << std::endl;
 
     std::pair<int64_t, int64_t> bbo = lob.get_bbo();
     std::cout << std::left << std::setw(25) << "  Final LOB BBO:"
@@ -105,8 +108,9 @@ int main(int argc, char *argv[]) {
               << static_cast<double>(bbo.first) / 1e9 << " @ $"
               << static_cast<double>(bbo.second) / 1e9 << std::endl;
 
-    std::cout << std::left << std::setw(25) << "  Strategy Position:"
-              << strategy.get_position() << " units" << std::endl;
+    std::cout << std::left << std::setw(25)
+              << "  Strategy Position:" << strategy.get_position() << " units"
+              << std::endl;
     std::cout << "============================================\n" << std::endl;
     oms.print_summary(strategy.get_last_valid_mid_price());
     profiler.print_histograms(

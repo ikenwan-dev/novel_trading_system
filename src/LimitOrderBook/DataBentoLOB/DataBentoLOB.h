@@ -15,8 +15,6 @@ public:
   std::pair<int64_t, int64_t> get_bbo() const;
   uint64_t get_level_qty(databento::Side side, int64_t price) const;
   uint64_t get_total_volume() const;
-  // add some functions for retrieiving bbo, price, levels, possibly orders
-  // ahead  etc
 
 private:
   struct Order {
