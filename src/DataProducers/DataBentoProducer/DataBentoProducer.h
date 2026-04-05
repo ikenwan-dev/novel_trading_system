@@ -1,6 +1,5 @@
 #pragma once
 #include "Constants/Constants.h"
-#include "DataProducers/DataProducer.h"
 #include "SharedMemory/IPCInteractor.h"
 #include <databento/historical.hpp>
 #include <string>
@@ -8,7 +7,7 @@
 
 
 namespace backtesting_engine::mbo {
-class DataBentoProducer : public DataProducer {
+class DataBentoProducer {
 public:
   using Interactor =
       common::IPCInteractor<databento::MboMsg, Constants::RING_BUFFER_SIZE>;
@@ -22,7 +21,7 @@ public:
   DataBentoProducer(DataBentoProducer &&) = delete;
   DataBentoProducer &operator=(DataBentoProducer &&) = delete;
 
-  void produce() override;
+  void produce();
 
 private:
   std::vector<std::string> mbo_filepaths_;
