@@ -1,14 +1,13 @@
 #pragma once
 
 #include "Constants/Constants.h"
-#include "DataConsumers/DataConsumer.h"
 #include "LimitOrderBook/DataBentoLOB/DataBentoLOB.h"
 #include "SharedMemory/IPCInteractor.h"
 #include <databento/historical.hpp>
 
 
 namespace backtesting_engine::mbo {
-class DataBentoConsumer : public DataConsumer {
+class DataBentoConsumer {
 public:
   using Interactor =
       common::IPCInteractor<databento::MboMsg, Constants::RING_BUFFER_SIZE>;

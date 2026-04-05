@@ -1,6 +1,5 @@
 #pragma once
 
-#include "DataConsumers/DataConsumer.h"
 #include "LimitOrderBook/DataBentoLOB/DataBentoLOB.h"
 #include "NetworkSimulator/NetworkSimulator.h"
 #include "OrderManagementSystem/OrderManagementSystem.h"
@@ -24,9 +23,14 @@ concept StrategyConcept =
       { strategy.on_book_update(ts, tsc, lob) } -> std::same_as<void>;
     };
 
-template <StrategyConcept Strategy> class MBOSimulationEngine {
+template <typename T>
+concept DataConsumerConcept = requires(T consumer, databento::MboMsg &out_msg) {
+  { consumer.try_poll(out_msg) } -> std::same_as<bool>;
+};
+
+template <DataConsumerConcept Consumer, StrategyConcept Strategy> class MBOSimulationEngine {
 public:
-  MBOSimulationEngine(DataConsumer &consumer, NetworkSimulator &network_sim,
+  MBOSimulationEngine(Consumer &consumer, NetworkSimulator &network_sim,
                       VirtualExchange &virtual_exchange, DataBentoLOB &lob,
                       OrderManagementSystem &oms, Strategy &strategy,
                       performance::LatencyProfiler &profiler)
@@ -39,7 +43,7 @@ public:
 private:
   void route_internal_event(const EventV2 &ev);
 
-  DataConsumer &consumer_;
+  Consumer &consumer_;
   NetworkSimulator &network_sim_;
   VirtualExchange &virtual_exchange_;
   DataBentoLOB &lob_;
@@ -55,8 +59,8 @@ template <class... Ts> struct overloaded : Ts... {
 };
 template <class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
-template <StrategyConcept Strategy>
-void MBOSimulationEngine<Strategy>::route_internal_event(const EventV2 &ev) {
+template <DataConsumerConcept Consumer, StrategyConcept Strategy>
+void MBOSimulationEngine<Consumer, Strategy>::route_internal_event(const EventV2 &ev) {
   std::visit(
       overloaded{[&](const CreateOrderEvent & /*payload*/) {
                    virtual_exchange_.on_update(ev);
@@ -81,7 +85,7 @@ void MBOSimulationEngine<Strategy>::route_internal_event(const EventV2 &ev) {
       ev.payload);
 }
 
-template <StrategyConcept Strategy> void MBOSimulationEngine<Strategy>::run() {
+template <DataConsumerConcept Consumer, StrategyConcept Strategy> void MBOSimulationEngine<Consumer, Strategy>::run() {
   bool reading_feed = true;
 
   while (reading_feed || !network_sim_.get_event_queue().empty()) {

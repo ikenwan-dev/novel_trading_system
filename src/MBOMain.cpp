@@ -56,9 +56,9 @@ int main() {
     DataBentoConsumer data_consumer(reader);
 
     // 8. Simulation Engine
-    MBOSimulationEngine<MarketMaker> engine(data_consumer, simulator,
-                                            virtual_exchange, lob, oms,
-                                            strategy, profiler);
+    MBOSimulationEngine engine(data_consumer, simulator,
+                               virtual_exchange, lob, oms,
+                               strategy, profiler);
 
     std::cout << "Starting Simulation Engine..." << std::endl;
     auto start = std::chrono::high_resolution_clock::now();
