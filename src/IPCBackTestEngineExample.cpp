@@ -64,14 +64,21 @@ int main() {
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> diff = end - start;
 
-    std::cout << "Simulation completed in " << diff.count() << " seconds."
-              << std::endl;
+    std::cout << "\n============================================\n";
+    std::cout << "           SIMULATION RUN SUMMARY           \n";
+    std::cout << "============================================\n";
+    std::cout << std::left << std::setw(25) << "  Duration:" << std::fixed
+              << std::setprecision(4) << diff.count() << " seconds" << std::endl;
+
     std::pair<int64_t, int64_t> bbo = lob.get_bbo();
-    std::cout << "Final LOB BBO: $" << std::fixed << std::setprecision(2)
+    std::cout << std::left << std::setw(25) << "  Final LOB BBO:"
+              << " $" << std::fixed << std::setprecision(2)
               << static_cast<double>(bbo.first) / 1e9 << " @ $"
               << static_cast<double>(bbo.second) / 1e9 << std::endl;
-    std::cout << "Final Portfolio Holdings inside Strategy: "
-              << strategy.get_position() << std::endl;
+
+    std::cout << std::left << std::setw(25) << "  Strategy Position:"
+              << strategy.get_position() << " units" << std::endl;
+    std::cout << "============================================\n" << std::endl;
     oms.print_summary(strategy.get_last_valid_mid_price());
     profiler.print_histograms(
         std::chrono::duration_cast<std::chrono::nanoseconds>(diff).count());

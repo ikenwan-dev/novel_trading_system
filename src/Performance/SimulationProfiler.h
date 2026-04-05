@@ -29,7 +29,7 @@ public:
 
   void print_histograms() {
     std::cout << "\n============================================\n";
-    std::cout << "         VIRTUAL EXCHANGE SIMULATION METRICS        \n";
+    std::cout << "    VIRTUAL EXCHANGE SIMULATION METRICS     \n";
     std::cout << "============================================\n";
 
     print_metric(SimMetric::VEX_ORDER_ADD,
