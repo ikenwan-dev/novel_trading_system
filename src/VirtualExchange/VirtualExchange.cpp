@@ -1,6 +1,7 @@
 #include "VirtualExchange.h"
 #include "Events/Mbo/MboEvent.h"
 #include <algorithm>
+#include "Performance/TSC_Clock.h"
 
 namespace backtesting_engine::mbo {
 void VirtualExchange::on_update(const EventV2 &event) {
@@ -18,6 +19,7 @@ void VirtualExchange::on_update(const EventV2 &event) {
 
 void VirtualExchange::on_create_order(uint64_t timestamp_ns,
                                       const CreateOrderEvent &event) {
+  uint64_t start_tsc = performance::get_tsc();
   if (order_metadata_.find(event.order_id) != order_metadata_.end()) {
     throw std::runtime_error{"Order already exists"};
     // Could also potentially reject order
@@ -41,10 +43,15 @@ void VirtualExchange::on_create_order(uint64_t timestamp_ns,
                           VirtualOrderMetaData{event.side, event.price});
   simulator_.send_inbound_event(
       {timestamp_ns, AckCreateOrderEvent{event.order_id}});
+  
+  uint64_t end_tsc = performance::get_tsc();
+  sim_profiler_.record_latency(performance::SimMetric::VEX_ORDER_ADD,
+                               performance::TSC_Clock::tsc_to_nanoseconds(end_tsc - start_tsc));
 }
 
 void VirtualExchange::on_cancel_order(uint64_t timestamp_ns,
                                       const CancelOrderEvent &event) {
+  uint64_t start_tsc = performance::get_tsc();
   auto order_metadata_it = order_metadata_.find(event.order_id);
   if (order_metadata_it == order_metadata_.end()) {
       // Race condition: Order was already completely filled in the matching engine, 
@@ -52,6 +59,10 @@ void VirtualExchange::on_cancel_order(uint64_t timestamp_ns,
       // We safely ignore this "too late to cancel" request.
       simulator_.send_inbound_event(
           {timestamp_ns, AckCancelOrderEvent{event.order_id}}); // Ideally a CancelReject, but we map to AckCancel to let OMS clean it up gracefully if it wants.
+      
+      uint64_t end_tsc = performance::get_tsc();
+      sim_profiler_.record_latency(performance::SimMetric::VEX_ORDER_CANCEL,
+                                   performance::TSC_Clock::tsc_to_nanoseconds(end_tsc - start_tsc));
       return;
   }
   int64_t price = order_metadata_it->second.price;
@@ -72,8 +83,13 @@ void VirtualExchange::on_cancel_order(uint64_t timestamp_ns,
   order_metadata_.erase(order_metadata_it);
   simulator_.send_inbound_event(
       {timestamp_ns, AckCancelOrderEvent{event.order_id}});
+      
+  uint64_t end_tsc = performance::get_tsc();
+  sim_profiler_.record_latency(performance::SimMetric::VEX_ORDER_CANCEL,
+                               performance::TSC_Clock::tsc_to_nanoseconds(end_tsc - start_tsc));
 }
 void VirtualExchange::on_fill(const databento::MboMsg &msg) {
+  uint64_t start_tsc = performance::get_tsc();
   VirtualPriceLevels &levels = get_side(msg.side);
   uint64_t fill_qty_left = msg.size;
   uint64_t timestamp_ns = msg.ts_recv.time_since_epoch().count();
@@ -95,6 +111,10 @@ void VirtualExchange::on_fill(const databento::MboMsg &msg) {
       levels_it++;
     }
   }
+  
+  uint64_t end_tsc = performance::get_tsc();
+  sim_profiler_.record_latency(performance::SimMetric::VEX_MATCHING,
+                               performance::TSC_Clock::tsc_to_nanoseconds(end_tsc - start_tsc));
 }
 
 VirtualExchange::VirtualPriceLevels &

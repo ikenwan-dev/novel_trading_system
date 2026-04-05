@@ -5,6 +5,7 @@
 #include "NetworkSimulator/NetworkSimulator.h"
 #include "OrderManagementSystem/OrderManagementSystem.h"
 #include "Performance/LatencyProfiler.h"
+#include "Performance/SimulationProfiler.h"
 #include "Performance/TSC_Clock.h"
 #include "RiskManager/Mbo/MBORiskManager.h"
 #include "Strategies/MBOStrategies/MarketMaker/MarketMaker.h"
@@ -39,12 +40,13 @@ int main() {
     // We instantiate OMS with max_orders
     OrderManagementSystem oms(simulator, risk_manager, 20000000);
 
-    // 4. Virtual Exchange
-    VirtualExchange virtual_exchange(simulator, lob);
-
-    // 5. Performance Profiler
+    // 4. Performance Profilers
     performance::TSC_Clock::calibrate();
     performance::LatencyProfiler profiler;
+    performance::SimulationProfiler sim_profiler;
+
+    // 5. Virtual Exchange
+    VirtualExchange virtual_exchange(simulator, lob, sim_profiler);
 
     // 6. Strategy (Market Maker)
     // For example, half_spread_ticks = 5, order_qty = 10
@@ -77,6 +79,7 @@ int main() {
     oms.print_summary(strategy.get_last_valid_mid_price());
     profiler.print_histograms(
         std::chrono::duration_cast<std::chrono::nanoseconds>(diff).count());
+    sim_profiler.print_histograms();
 
     reader.unlink();
 

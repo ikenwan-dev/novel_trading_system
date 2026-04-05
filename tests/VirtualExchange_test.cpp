@@ -1,5 +1,6 @@
 #include "VirtualExchange/VirtualExchange.h"
 #include <gtest/gtest.h>
+#include "Performance/SimulationProfiler.h"
 
 using namespace backtesting_engine;
 using namespace backtesting_engine::mbo;
@@ -9,10 +10,11 @@ protected:
   EventQueue event_queue;
   NetworkSimulator simulator;
   DataBentoLOB lob;
+  performance::SimulationProfiler sim_profiler;
   VirtualExchange vx;
 
   VirtualExchangeTest()
-      : simulator(event_queue, 0, 0), lob(), vx(simulator, lob) {}
+      : simulator(event_queue, 0, 0), lob(), sim_profiler(), vx(simulator, lob, sim_profiler) {}
 
   databento::MboMsg create_mbo_msg(uint64_t order_id, int64_t price,
                                    uint32_t size, databento::Action action,

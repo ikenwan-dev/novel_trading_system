@@ -41,9 +41,9 @@ public:
     std::cout << "         HFT PERFORMANCE METRICS            \n";
     std::cout << "============================================\n";
 
-    double msg_per_sec = (static_cast<double>(msg_throughput_count_) /
-                          sim_wall_clock_time_ns) *
-                         1e9;
+    double msg_per_sec =
+        (static_cast<double>(msg_throughput_count_) / sim_wall_clock_time_ns) *
+        1e9;
     std::cout << "System Throughput: " << std::fixed << std::setprecision(2)
               << msg_per_sec << " Msg/Sec\n";
     std::cout << "Messages Processed: " << msg_throughput_count_ << "\n\n";
@@ -58,7 +58,7 @@ private:
   void print_metric(Metric type, const std::string &name) {
     auto &vec = latencies_[static_cast<int>(type)];
     if (vec.empty()) {
-      std::cout << "[" << name << "] No data recorded.\n";
+      std::cout << "[" << name << "] No data recorded.\n\n";
       return;
     }
 

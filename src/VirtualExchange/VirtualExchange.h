@@ -5,12 +5,14 @@
 #include <databento/record.hpp>
 #include <map>
 #include <unordered_map>
+#include "Performance/SimulationProfiler.h"
 
 namespace backtesting_engine::mbo {
 class VirtualExchange {
 public:
-  VirtualExchange(NetworkSimulator &simulator, DataBentoLOB &lob)
-      : simulator_(simulator), lob_(lob) {}
+  VirtualExchange(NetworkSimulator &simulator, DataBentoLOB &lob,
+                  performance::SimulationProfiler &sim_profiler)
+      : simulator_(simulator), lob_(lob), sim_profiler_(sim_profiler) {}
   void on_fill(const databento::MboMsg &msg);
 
   void on_update(const EventV2 &event);
@@ -35,6 +37,7 @@ private:
   std::unordered_map<uint64_t, VirtualOrderMetaData> order_metadata_;
   NetworkSimulator &simulator_;
   DataBentoLOB &lob_;
+  performance::SimulationProfiler &sim_profiler_;
   // using VirtualPriceLevel = std::vector<VirtualOrder>;
   struct VirtualPriceLevel {
     std::vector<VirtualOrder> orders;
