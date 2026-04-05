@@ -107,15 +107,31 @@ template <typename Strategy> void MBOSimulationEngine<Strategy>::run() {
       switch (msg.action) {
       case databento::Action::Add:
       case databento::Action::Modify:
-      case databento::Action::Cancel:
-      case databento::Action::Clear: {
+      case databento::Action::Cancel: {
         uint64_t start_tsc = performance::get_tsc();
         lob_.update_book(msg);
         uint64_t end_tsc = performance::get_tsc();
+        
+        performance::Metric metric = performance::Metric::LOB_ADD;
+        if (msg.action == databento::Action::Cancel) {
+          metric = performance::Metric::LOB_CANCEL;
+        } else if (msg.action == databento::Action::Modify) {
+          metric = performance::Metric::LOB_MODIFY;
+        }
+
         profiler_.record_latency(
-            performance::Metric::LOB_UPDATE,
+            metric,
             performance::TSC_Clock::tsc_to_nanoseconds(end_tsc - start_tsc));
 
+        strategy_.on_book_update(engine_time_ns_, start_tsc, lob_);
+        break;
+      }
+      case databento::Action::Clear: {
+        // We omit Clear from timing metrics because its O(N) memory wipe
+        // will skew our microsecond Hot Path histograms and typically 
+        // only happens at market boundaries.
+        uint64_t start_tsc = performance::get_tsc();
+        lob_.update_book(msg);
         strategy_.on_book_update(engine_time_ns_, start_tsc, lob_);
         break;
       }

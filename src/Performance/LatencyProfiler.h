@@ -9,7 +9,7 @@
 
 namespace backtesting_engine::performance {
 
-enum class Metric { TICK_TO_TRADE, LOB_UPDATE, COUNT };
+enum class Metric { TICK_TO_TRADE, LOB_ADD, LOB_CANCEL, LOB_MODIFY, COUNT };
 
 class LatencyProfiler {
 public:
@@ -48,7 +48,9 @@ public:
               << msg_per_sec << " Msg/Sec\n";
     std::cout << "Messages Processed: " << msg_throughput_count_ << "\n\n";
 
-    print_metric(Metric::LOB_UPDATE, "Limit Order Book Update Latency");
+    print_metric(Metric::LOB_ADD, "LOB Add Latency");
+    print_metric(Metric::LOB_CANCEL, "LOB Cancel Latency");
+    print_metric(Metric::LOB_MODIFY, "LOB Modify Latency");
     print_metric(Metric::TICK_TO_TRADE, "Tick-to-Trade Latency");
   }
 
