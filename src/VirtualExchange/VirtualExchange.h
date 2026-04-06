@@ -4,21 +4,23 @@
 #include "NetworkSimulator/NetworkSimulator.h"
 #include "Performance/SimulationProfiler.h"
 #include "Performance/TSC_Clock.h"
+#include <algorithm>
 #include <databento/record.hpp>
 #include <map>
+#include <stdexcept>
+#include <string>
 #include <unordered_map>
-#include <algorithm>
+#include <vector>
 
 namespace backtesting_engine::mbo {
 
 /**
  * @brief Matches user orders against incoming market data (MBO).
- * 
- * Generic over the LimitOrderBook implementation to allow for static polymorphism
- * and aggressive compiler inlining.
+ *
+ * Generic over the LimitOrderBook implementation to allow for static
+ * polymorphism and aggressive compiler inlining.
  */
-template <LimitOrderBookConcept LOB>
-class VirtualExchange {
+template <LimitOrderBookConcept LOB> class VirtualExchange {
 public:
   VirtualExchange(NetworkSimulator &simulator, LOB &lob,
                   performance::SimulationProfiler &sim_profiler)
@@ -29,16 +31,15 @@ public:
 
 private:
   template <typename LevelIterator>
-  void fill_orders_at_price_level(LevelIterator &levels_it,
-                                  uint64_t &fill_qty_left,
-                                  uint64_t timestamp_ns,
-                                  int64_t actual_fill_price);
+  void
+  fill_orders_at_price_level(LevelIterator &levels_it, uint64_t &fill_qty_left,
+                             uint64_t timestamp_ns, int64_t actual_fill_price);
 
   struct VirtualOrderMetaData {
     databento::Side side;
     int64_t price;
   };
-  
+
   struct VirtualOrder {
     uint64_t order_id;
     uint64_t qty_ahead;
@@ -61,12 +62,12 @@ private:
   VirtualPriceLevels open_sell_orders_; // key is price
 
   VirtualPriceLevels &get_side(databento::Side side);
-  
-  typename VirtualPriceLevels::iterator get_price_level(VirtualPriceLevels &levels,
-                                                        int64_t price);
 
-  typename std::vector<VirtualOrder>::iterator get_order(VirtualPriceLevel &level,
-                                                         uint64_t order_id);
+  typename VirtualPriceLevels::iterator
+  get_price_level(VirtualPriceLevels &levels, int64_t price);
+
+  typename std::vector<VirtualOrder>::iterator
+  get_order(VirtualPriceLevel &level, uint64_t order_id);
 
   void on_create_order(uint64_t timestamp_ns, const CreateOrderEvent &event);
   void on_cancel_order(uint64_t timestamp_ns, const CancelOrderEvent &event);
@@ -90,12 +91,12 @@ void VirtualExchange<LOB>::on_update(const EventV2 &event) {
 
 template <LimitOrderBookConcept LOB>
 void VirtualExchange<LOB>::on_create_order(uint64_t timestamp_ns,
-                                            const CreateOrderEvent &event) {
+                                           const CreateOrderEvent &event) {
   uint64_t start_tsc = performance::get_tsc();
   if (order_metadata_.find(event.order_id) != order_metadata_.end()) {
     throw std::runtime_error{"Order already exists"};
   }
-  
+
   VirtualPriceLevels &levels = get_side(event.side);
   uint64_t qty_ahead = lob_.get_level_qty(event.side, event.price);
 
@@ -109,29 +110,32 @@ void VirtualExchange<LOB>::on_create_order(uint64_t timestamp_ns,
   levels[event.price].total_qty_ahead += qty_ahead;
   order_metadata_.emplace(event.order_id,
                           VirtualOrderMetaData{event.side, event.price});
-  
+
   simulator_.send_inbound_event(
       {timestamp_ns, AckCreateOrderEvent{event.order_id}});
-  
+
   uint64_t end_tsc = performance::get_tsc();
-  sim_profiler_.record_latency(performance::SimMetric::VEX_ORDER_ADD,
-                               performance::TSC_Clock::tsc_to_nanoseconds(end_tsc - start_tsc));
+  sim_profiler_.record_latency(
+      performance::SimMetric::VEX_ORDER_ADD,
+      performance::TSC_Clock::tsc_to_nanoseconds(end_tsc - start_tsc));
 }
 
 template <LimitOrderBookConcept LOB>
 void VirtualExchange<LOB>::on_cancel_order(uint64_t timestamp_ns,
-                                            const CancelOrderEvent &event) {
+                                           const CancelOrderEvent &event) {
   uint64_t start_tsc = performance::get_tsc();
   auto order_metadata_it = order_metadata_.find(event.order_id);
   if (order_metadata_it == order_metadata_.end()) {
-      simulator_.send_inbound_event({timestamp_ns, AckCancelOrderEvent{event.order_id}});
-      
-      uint64_t end_tsc = performance::get_tsc();
-      sim_profiler_.record_latency(performance::SimMetric::VEX_ORDER_CANCEL,
-                                   performance::TSC_Clock::tsc_to_nanoseconds(end_tsc - start_tsc));
-      return;
+    simulator_.send_inbound_event(
+        {timestamp_ns, AckCancelOrderEvent{event.order_id}});
+
+    uint64_t end_tsc = performance::get_tsc();
+    sim_profiler_.record_latency(
+        performance::SimMetric::VEX_ORDER_CANCEL,
+        performance::TSC_Clock::tsc_to_nanoseconds(end_tsc - start_tsc));
+    return;
   }
-  
+
   int64_t price = order_metadata_it->second.price;
   VirtualPriceLevels &levels = get_side(order_metadata_it->second.side);
   auto level_it = get_price_level(levels, price);
@@ -144,18 +148,20 @@ void VirtualExchange<LOB>::on_cancel_order(uint64_t timestamp_ns,
   } else {
     level.total_qty_ahead -= order_it->qty_ahead;
   }
-  
+
   level.orders.erase(order_it);
   if (level.orders.empty()) {
     levels.erase(level_it);
   }
-  
+
   order_metadata_.erase(order_metadata_it);
-  simulator_.send_inbound_event({timestamp_ns, AckCancelOrderEvent{event.order_id}});
-      
+  simulator_.send_inbound_event(
+      {timestamp_ns, AckCancelOrderEvent{event.order_id}});
+
   uint64_t end_tsc = performance::get_tsc();
-  sim_profiler_.record_latency(performance::SimMetric::VEX_ORDER_CANCEL,
-                               performance::TSC_Clock::tsc_to_nanoseconds(end_tsc - start_tsc));
+  sim_profiler_.record_latency(
+      performance::SimMetric::VEX_ORDER_CANCEL,
+      performance::TSC_Clock::tsc_to_nanoseconds(end_tsc - start_tsc));
 }
 
 template <LimitOrderBookConcept LOB>
@@ -182,10 +188,11 @@ void VirtualExchange<LOB>::on_fill(const databento::MboMsg &msg) {
       levels_it++;
     }
   }
-  
+
   uint64_t end_tsc = performance::get_tsc();
-  sim_profiler_.record_latency(performance::SimMetric::VEX_MATCHING,
-                               performance::TSC_Clock::tsc_to_nanoseconds(end_tsc - start_tsc));
+  sim_profiler_.record_latency(
+      performance::SimMetric::VEX_MATCHING,
+      performance::TSC_Clock::tsc_to_nanoseconds(end_tsc - start_tsc));
 }
 
 template <LimitOrderBookConcept LOB>
@@ -196,7 +203,8 @@ VirtualExchange<LOB>::get_side(databento::Side side) {
 
 template <LimitOrderBookConcept LOB>
 typename VirtualExchange<LOB>::VirtualPriceLevels::iterator
-VirtualExchange<LOB>::get_price_level(VirtualPriceLevels &levels, int64_t price) {
+VirtualExchange<LOB>::get_price_level(VirtualPriceLevels &levels,
+                                      int64_t price) {
   auto level_it = levels.find(price);
   if (level_it == levels.end()) {
     throw std::runtime_error{"Level with price: " + std::to_string(price) +
@@ -209,9 +217,9 @@ template <LimitOrderBookConcept LOB>
 typename std::vector<typename VirtualExchange<LOB>::VirtualOrder>::iterator
 VirtualExchange<LOB>::get_order(VirtualPriceLevel &level, uint64_t order_id) {
   auto order_it = std::find_if(level.orders.begin(), level.orders.end(),
-                                [order_id](const VirtualOrder &order) {
-                                  return order.order_id == order_id;
-                                });
+                               [order_id](const VirtualOrder &order) {
+                                 return order.order_id == order_id;
+                               });
   if (order_it == level.orders.end()) {
     throw std::runtime_error{"Order with id " + std::to_string(order_id) +
                              " does not exist in level"};
@@ -221,10 +229,9 @@ VirtualExchange<LOB>::get_order(VirtualPriceLevel &level, uint64_t order_id) {
 
 template <LimitOrderBookConcept LOB>
 template <typename LevelIterator>
-void VirtualExchange<LOB>::fill_orders_at_price_level(LevelIterator &levels_it,
-                                                       uint64_t &fill_qty_left,
-                                                       uint64_t timestamp_ns,
-                                                       int64_t actual_fill_price) {
+void VirtualExchange<LOB>::fill_orders_at_price_level(
+    LevelIterator &levels_it, uint64_t &fill_qty_left, uint64_t timestamp_ns,
+    int64_t actual_fill_price) {
   auto level_it = levels_it->second.orders.begin();
   while (level_it != levels_it->second.orders.end() && fill_qty_left) {
     if (level_it->qty_ahead < fill_qty_left) {
@@ -249,10 +256,11 @@ void VirtualExchange<LOB>::fill_orders_at_price_level(LevelIterator &levels_it,
         level_it->remaining_qty = 0;
       }
     }
-    
+
     if (filled_qty) {
       simulator_.send_inbound_event(
-          {timestamp_ns, AckFillOrderEvent{level_it->order_id, filled_qty, actual_fill_price}});
+          {timestamp_ns, AckFillOrderEvent{level_it->order_id, filled_qty,
+                                           actual_fill_price}});
     }
 
     if (level_it->remaining_qty == 0) {
