@@ -1,7 +1,6 @@
 #pragma once
 #include <array>
 #include <cstddef>
-#include <cstdint>
 
 namespace backtesting_engine::common {
 
