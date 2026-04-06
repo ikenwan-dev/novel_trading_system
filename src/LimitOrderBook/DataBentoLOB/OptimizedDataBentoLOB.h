@@ -22,6 +22,8 @@ public:
   static constexpr size_t MAX_ORDERS = 1000000;
   static constexpr size_t ID_MAP_CAPACITY = 2097152; // Power of 2 (2^21)
 
+  OptimizedDataBentoLOB();
+
   struct OrderNode {
     databento::MboMsg msg;
     int32_t next_idx = -1;
@@ -46,8 +48,9 @@ private:
   common::FlatHashMap<uint64_t, int32_t, ID_MAP_CAPACITY> id_map_;
 
   // Price levels kept sorted in contiguous vectors (simulating std::flat_map)
-  std::vector<PriceLevel> bids_; // Sorted DESCENDING
-  std::vector<PriceLevel> asks_; // Sorted ASCENDING
+  // Reversed sort order to keep Top-Of-Book (TOB) at the .back() for O(1) pops
+  std::vector<PriceLevel> bids_; // Sorted ASCENDING (Best Bid is at `.back()`)
+  std::vector<PriceLevel> asks_; // Sorted DESCENDING (Best Ask is at `.back()`)
 
   void add_order(const databento::MboMsg &msg);
   void cancel_order(const databento::MboMsg &msg);

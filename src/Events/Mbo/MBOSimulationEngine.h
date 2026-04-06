@@ -1,6 +1,6 @@
 #pragma once
 
-#include "LimitOrderBook/DataBentoLOB/DataBentoLOB.h"
+#include "LimitOrderBook/LimitOrderBookConcept.h"
 #include "NetworkSimulator/NetworkSimulator.h"
 #include "OrderManagementSystem/OrderManagementSystem.h"
 #include "Performance/LatencyProfiler.h"
@@ -13,10 +13,10 @@
 
 namespace backtesting_engine::mbo {
 
-template <typename T>
+template <typename T, typename LOB>
 concept StrategyConcept =
     requires(T strategy, uint64_t order_id, uint64_t qty, int64_t price,
-             uint64_t ts, uint64_t tsc, const DataBentoLOB &lob) {
+             uint64_t ts, uint64_t tsc, const LOB &lob) {
       { strategy.on_order_accepted(order_id) } -> std::same_as<void>;
       { strategy.on_order_canceled(order_id) } -> std::same_as<void>;
       { strategy.on_order_filled(order_id, qty, price) } -> std::same_as<void>;
@@ -28,10 +28,11 @@ concept DataConsumerConcept = requires(T consumer, databento::MboMsg &out_msg) {
   { consumer.try_poll(out_msg) } -> std::same_as<bool>;
 };
 
-template <DataConsumerConcept Consumer, StrategyConcept Strategy> class MBOSimulationEngine {
+template <DataConsumerConcept Consumer, LimitOrderBookConcept LOB, StrategyConcept<LOB> Strategy>
+class MBOSimulationEngine {
 public:
   MBOSimulationEngine(Consumer &consumer, NetworkSimulator &network_sim,
-                      VirtualExchange &virtual_exchange, DataBentoLOB &lob,
+                      VirtualExchange<LOB> &virtual_exchange, LOB &lob,
                       OrderManagementSystem &oms, Strategy &strategy,
                       performance::LatencyProfiler &profiler)
       : consumer_(consumer), network_sim_(network_sim),
@@ -45,8 +46,8 @@ private:
 
   Consumer &consumer_;
   NetworkSimulator &network_sim_;
-  VirtualExchange &virtual_exchange_;
-  DataBentoLOB &lob_;
+  VirtualExchange<LOB> &virtual_exchange_;
+  LOB &lob_;
   OrderManagementSystem &oms_;
   Strategy &strategy_;
   performance::LatencyProfiler &profiler_;
@@ -59,8 +60,8 @@ template <class... Ts> struct overloaded : Ts... {
 };
 template <class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
-template <DataConsumerConcept Consumer, StrategyConcept Strategy>
-void MBOSimulationEngine<Consumer, Strategy>::route_internal_event(const EventV2 &ev) {
+template <DataConsumerConcept Consumer, LimitOrderBookConcept LOB, StrategyConcept<LOB> Strategy>
+void MBOSimulationEngine<Consumer, LOB, Strategy>::route_internal_event(const EventV2 &ev) {
   std::visit(
       overloaded{[&](const CreateOrderEvent & /*payload*/) {
                    virtual_exchange_.on_update(ev);
@@ -85,7 +86,8 @@ void MBOSimulationEngine<Consumer, Strategy>::route_internal_event(const EventV2
       ev.payload);
 }
 
-template <DataConsumerConcept Consumer, StrategyConcept Strategy> void MBOSimulationEngine<Consumer, Strategy>::run() {
+template <DataConsumerConcept Consumer, LimitOrderBookConcept LOB, StrategyConcept<LOB> Strategy>
+void MBOSimulationEngine<Consumer, LOB, Strategy>::run() {
   bool reading_feed = true;
 
   while (reading_feed || !network_sim_.get_event_queue().empty()) {
@@ -93,20 +95,17 @@ template <DataConsumerConcept Consumer, StrategyConcept Strategy> void MBOSimula
     databento::MboMsg msg{};
 
     if (reading_feed) {
-      // Spin loop, polling the data consumer
       if (!consumer_.try_poll(msg))
         continue;
 
       if (msg == databento::MboMsg{}) {
-        reading_feed = false; // End of stream
+        reading_feed = false;
         continue;
       }
       profiler_.increment_throughput_counter();
       next_feed_ts = msg.ts_recv.time_since_epoch().count();
     }
 
-    // Process all internal events that occurred BEFORE or AT the incoming
-    // market data timestamp
     while (!network_sim_.get_event_queue().empty() &&
            network_sim_.get_event_queue().top().timestamp_ns <= next_feed_ts) {
       EventV2 ev = network_sim_.get_event_queue().top();
@@ -116,7 +115,6 @@ template <DataConsumerConcept Consumer, StrategyConcept Strategy> void MBOSimula
       route_internal_event(ev);
     }
 
-    // Apply Market Message
     if (reading_feed) {
       engine_time_ns_ = next_feed_ts;
       switch (msg.action) {
@@ -142,9 +140,6 @@ template <DataConsumerConcept Consumer, StrategyConcept Strategy> void MBOSimula
         break;
       }
       case databento::Action::Clear: {
-        // We omit Clear from timing metrics because its O(N) memory wipe
-        // will skew our microsecond Hot Path histograms and typically
-        // only happens at market boundaries.
         uint64_t start_tsc = performance::get_tsc();
         lob_.update_book(msg);
         strategy_.on_book_update(engine_time_ns_, start_tsc, lob_);

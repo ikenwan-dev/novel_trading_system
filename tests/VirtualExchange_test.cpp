@@ -1,5 +1,7 @@
 #include "VirtualExchange/VirtualExchange.h"
+#include "LimitOrderBook/DataBentoLOB/DataBentoLOB.h"
 #include <gtest/gtest.h>
+#include <memory>
 #include "Performance/SimulationProfiler.h"
 
 using namespace backtesting_engine;
@@ -9,12 +11,17 @@ class VirtualExchangeTest : public ::testing::Test {
 protected:
   EventQueue event_queue;
   NetworkSimulator simulator;
-  DataBentoLOB lob;
+  std::unique_ptr<DataBentoLOB> lob_ptr;
+  DataBentoLOB& lob;
   performance::SimulationProfiler sim_profiler;
-  VirtualExchange vx;
+  VirtualExchange<DataBentoLOB> vx;
 
   VirtualExchangeTest()
-      : simulator(event_queue, 0, 0), lob(), sim_profiler(), vx(simulator, lob, sim_profiler) {}
+      : simulator(event_queue, 0, 0), 
+        lob_ptr(std::make_unique<DataBentoLOB>()),
+        lob(*lob_ptr),
+        sim_profiler(), 
+        vx(simulator, lob, sim_profiler) {}
 
   databento::MboMsg create_mbo_msg(uint64_t order_id, int64_t price,
                                    uint32_t size, databento::Action action,

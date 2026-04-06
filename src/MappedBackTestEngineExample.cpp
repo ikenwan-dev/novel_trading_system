@@ -15,6 +15,7 @@
 #include <filesystem>
 #include <iomanip>
 #include <iostream>
+#include <memory>
 
 using namespace backtesting_engine;
 using namespace backtesting_engine::mbo;
@@ -44,8 +45,10 @@ int main(int argc, char *argv[]) {
                                Constants::INBOUND_LATENCY);
 
     // 2. Data Structures
-    // DataBentoLOB lob;
-    OptimizedDataBentoLOB lob;
+    // Choose your LOB implementation here:
+    using LOBType = DataBentoLOB;
+    auto lob = std::make_unique<LOBType>();
+
 
     // 3. Risk & OMS
     MBORiskManager risk_manager(200, 1000);
@@ -57,7 +60,7 @@ int main(int argc, char *argv[]) {
     performance::SimulationProfiler sim_profiler;
 
     // 5. Virtual Exchange
-    VirtualExchange virtual_exchange(simulator, lob, sim_profiler);
+    VirtualExchange<LOBType> virtual_exchange(simulator, *lob, sim_profiler);
 
     // 6. Strategy (Market Maker)
     MarketMaker strategy(oms, 5, 10, &profiler);
@@ -84,8 +87,9 @@ int main(int argc, char *argv[]) {
     DataBentoMappedConsumer data_consumer(filepaths);
 
     // 8. Simulation Engine
-    MBOSimulationEngine engine(data_consumer, simulator, virtual_exchange, lob,
-                               oms, strategy, profiler);
+    MBOSimulationEngine<DataBentoMappedConsumer, LOBType, MarketMaker> engine(
+        data_consumer, simulator, virtual_exchange, *lob, oms, strategy,
+        profiler);
 
     std::cout << "Starting Simulation Engine (MMAP)..." << std::endl;
     auto start = std::chrono::high_resolution_clock::now();
@@ -102,7 +106,7 @@ int main(int argc, char *argv[]) {
               << std::setprecision(4) << diff.count() << " seconds"
               << std::endl;
 
-    std::pair<int64_t, int64_t> bbo = lob.get_bbo();
+    std::pair<int64_t, int64_t> bbo = lob->get_bbo();
     std::cout << std::left << std::setw(25) << "  Final LOB BBO:"
               << " $" << std::fixed << std::setprecision(2)
               << static_cast<double>(bbo.first) / 1e9 << " @ $"

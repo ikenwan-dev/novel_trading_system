@@ -1,9 +1,9 @@
-#include "LimitOrderBook/DataBentoLOB/DataBentoLOB.h"
 #include "OrderManagementSystem/OrderManagementSystem.h"
 #include "Performance/LatencyProfiler.h"
 #include "Performance/TSC_Clock.h"
 #include "RiskManager/Mbo/RiskResult.h"
 #include <databento/record.hpp>
+#include "LimitOrderBook/LimitOrderBookConcept.h"
 
 namespace backtesting_engine::mbo {
 template <typename Derived> class MBOStrategyBase {
@@ -18,8 +18,9 @@ public:
       : oms_(oms), profiler_(profiler) {}
 
   // called by event loop when the LOB updates
+  template <LimitOrderBookConcept LOB>
   inline void on_book_update(int64_t timestamp_ns, uint64_t start_tsc,
-                             const DataBentoLOB &lob) {
+                             const LOB &lob) {
     current_start_tsc_ = start_tsc;
     static_cast<Derived *>(this)->impl_on_book_update(timestamp_ns, lob);
   }

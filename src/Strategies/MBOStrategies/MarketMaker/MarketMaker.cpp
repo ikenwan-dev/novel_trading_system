@@ -7,57 +7,6 @@ MarketMaker::MarketMaker(OrderManagementSystem &oms, int64_t half_spread_ticks,
     : MBOStrategyBase<MarketMaker>(oms, profiler), half_spread_ticks_(half_spread_ticks),
       order_qty_(order_qty) {}
 
-void MarketMaker::impl_on_book_update(int64_t timestamp_ns,
-                                      const DataBentoLOB &lob) {
-  auto bbo = lob.get_bbo();
-  if (bbo.first == 0 || bbo.second == 0 ||
-      bbo.first == databento::kUndefPrice ||
-      bbo.second == databento::kUndefPrice) {
-    // HFT Best Practice: If the book is empty or data is invalid, immediately
-    // pull all quotes!
-    cancel_active_orders(timestamp_ns);
-    return;
-  }
-
-  int64_t mid_price = (bbo.first + bbo.second) / 2;
-  last_valid_mid_price_ = mid_price;
-
-  int64_t skew = 0;
-  // Inventory risk management: Shift quotes down to get flat if long
-  if (current_position_ > 0)
-    skew = -half_spread_ticks_ / 2;
-  // Shift quotes up to buy back if short
-  if (current_position_ < 0)
-    skew = half_spread_ticks_ / 2;
-
-  int64_t target_bid = mid_price - half_spread_ticks_ + skew;
-  int64_t target_ask = mid_price + half_spread_ticks_ + skew;
-
-  // Price Drift Cancellation Logic
-  if (active_bid_id_.has_value() && active_bid_price_ != target_bid) {
-    cancel_order(timestamp_ns, *active_bid_id_);
-    active_bid_id_ = std::nullopt;
-  } else if (!active_bid_id_.has_value()) {
-    auto [bid_id, risk] =
-        send_order(timestamp_ns, target_bid, order_qty_, databento::Side::Bid);
-    if (risk == RiskResult::APPROVED) {
-      active_bid_id_ = bid_id;
-      active_bid_price_ = target_bid;
-    }
-  }
-
-  if (active_ask_id_.has_value() && active_ask_price_ != target_ask) {
-    cancel_order(timestamp_ns, *active_ask_id_);
-    active_ask_id_ = std::nullopt;
-  } else if (!active_ask_id_.has_value()) {
-    auto [ask_id, risk] =
-        send_order(timestamp_ns, target_ask, order_qty_, databento::Side::Ask);
-    if (risk == RiskResult::APPROVED) {
-      active_ask_id_ = ask_id;
-      active_ask_price_ = target_ask;
-    }
-  }
-}
 
 void MarketMaker::cancel_active_orders(int64_t timestamp_ns) {
   if (active_bid_id_.has_value()) {

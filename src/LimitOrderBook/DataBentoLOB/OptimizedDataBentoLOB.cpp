@@ -3,6 +3,19 @@
 
 namespace backtesting_engine::mbo {
 
+OptimizedDataBentoLOB::OptimizedDataBentoLOB() {
+  bids_.reserve(100000);
+  asks_.reserve(100000);
+
+  // Pre-fault order_pool pages to prevent OS page faults on hot path
+  for (size_t i = 0; i < MAX_ORDERS; i += 128) {
+    if (i < order_pool_.capacity()) {
+      volatile auto touch = order_pool_[i].prev_idx;
+      (void)touch;
+    }
+  }
+}
+
 void OptimizedDataBentoLOB::update_book(const databento::MboMsg &msg) {
   switch (msg.action) {
     case databento::Action::Add:
@@ -24,9 +37,25 @@ void OptimizedDataBentoLOB::update_book(const databento::MboMsg &msg) {
 }
 
 std::pair<int64_t, int64_t> OptimizedDataBentoLOB::get_bbo() const {
-  return std::make_pair(
-      bids_.empty() ? databento::kUndefPrice : bids_.front().price,
-      asks_.empty() ? databento::kUndefPrice : asks_.front().price);
+  int64_t best_bid = databento::kUndefPrice;
+  // Bids sorted ASCENDING. Best is at the back.
+  for (auto it = bids_.rbegin(); it != bids_.rend(); ++it) {
+    if (it->total_qty > 0) {
+      best_bid = it->price;
+      break;
+    }
+  }
+
+  int64_t best_ask = databento::kUndefPrice;
+  // Asks sorted DESCENDING. Best is at the back.
+  for (auto it = asks_.rbegin(); it != asks_.rend(); ++it) {
+    if (it->total_qty > 0) {
+      best_ask = it->price;
+      break;
+    }
+  }
+
+  return {best_bid, best_ask};
 }
 
 uint64_t OptimizedDataBentoLOB::get_level_qty(databento::Side side, int64_t price) const {
@@ -35,7 +64,7 @@ uint64_t OptimizedDataBentoLOB::get_level_qty(databento::Side side, int64_t pric
   
   auto it = std::lower_bound(levels.begin(), levels.end(), price, 
       [is_bid](const PriceLevel& pl, int64_t p) {
-        return is_bid ? pl.price > p : pl.price < p;
+        return is_bid ? pl.price < p : pl.price > p;
       });
       
   if (it != levels.end() && it->price == price) {
@@ -120,14 +149,13 @@ void OptimizedDataBentoLOB::cancel_order(const databento::MboMsg &msg) {
       level->tail_idx = node.prev_idx;
     }
 
-    // Clean up empty price level
+    // Clean up empty price level (Tombstone logic)
     if (level->head_idx == -1) {
-      auto it = std::lower_bound(levels.begin(), levels.end(), node.msg.price, 
-          [is_bid](const PriceLevel& pl, int64_t p) {
-            return is_bid ? pl.price > p : pl.price < p;
-          });
-      if (it != levels.end() && it->price == node.msg.price) {
-        levels.erase(it);
+      // If it is a tombstone at the very edge (Top of Book), we pop it.
+      // This keeps Top-Of-Book pops O(1) and clears trailing tombstones.
+      // Otherwise, it sits safely in the middle without triggering O(N) shifts.
+      while (!levels.empty() && levels.back().total_qty == 0) {
+        levels.pop_back();
       }
     }
 
@@ -191,7 +219,7 @@ const std::vector<OptimizedDataBentoLOB::PriceLevel>& OptimizedDataBentoLOB::get
 OptimizedDataBentoLOB::PriceLevel* OptimizedDataBentoLOB::find_price_level(std::vector<PriceLevel>& side, int64_t price, bool is_bid) {
   auto it = std::lower_bound(side.begin(), side.end(), price, 
       [is_bid](const PriceLevel& pl, int64_t p) {
-        return is_bid ? pl.price > p : pl.price < p;
+        return is_bid ? pl.price < p : pl.price > p;
       });
 
   if (it != side.end() && it->price == price) {

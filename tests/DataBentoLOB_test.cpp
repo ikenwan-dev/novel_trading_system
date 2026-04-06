@@ -1,12 +1,18 @@
 #include "LimitOrderBook/DataBentoLOB/DataBentoLOB.h"
 #include <gtest/gtest.h>
+#include <memory>
 
 using namespace backtesting_engine;
 using namespace backtesting_engine::mbo;
 
 class DataBentoLOBTest : public ::testing::Test {
 protected:
-  DataBentoLOB lob;
+  std::unique_ptr<DataBentoLOB> lob_ptr;
+  DataBentoLOB& lob;
+
+  DataBentoLOBTest() 
+      : lob_ptr(std::make_unique<DataBentoLOB>()), 
+        lob(*lob_ptr) {}
 
   // Helper to create a dummy MboMsg
   databento::MboMsg create_msg(uint64_t order_id, int64_t price, uint32_t size,
