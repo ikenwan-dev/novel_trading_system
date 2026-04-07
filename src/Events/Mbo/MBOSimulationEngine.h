@@ -28,7 +28,8 @@ concept DataConsumerConcept = requires(T consumer, databento::MboMsg &out_msg) {
   { consumer.try_poll(out_msg) } -> std::same_as<bool>;
 };
 
-template <DataConsumerConcept Consumer, LimitOrderBookConcept LOB, StrategyConcept<LOB> Strategy>
+template <DataConsumerConcept Consumer, LimitOrderBookConcept LOB,
+          StrategyConcept<LOB> Strategy>
 class MBOSimulationEngine {
 public:
   MBOSimulationEngine(Consumer &consumer, NetworkSimulator &network_sim,
@@ -60,8 +61,10 @@ template <class... Ts> struct overloaded : Ts... {
 };
 template <class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
-template <DataConsumerConcept Consumer, LimitOrderBookConcept LOB, StrategyConcept<LOB> Strategy>
-void MBOSimulationEngine<Consumer, LOB, Strategy>::route_internal_event(const EventV2 &ev) {
+template <DataConsumerConcept Consumer, LimitOrderBookConcept LOB,
+          StrategyConcept<LOB> Strategy>
+void MBOSimulationEngine<Consumer, LOB, Strategy>::route_internal_event(
+    const EventV2 &ev) {
   std::visit(
       overloaded{[&](const CreateOrderEvent & /*payload*/) {
                    virtual_exchange_.on_update(ev);
@@ -86,7 +89,8 @@ void MBOSimulationEngine<Consumer, LOB, Strategy>::route_internal_event(const Ev
       ev.payload);
 }
 
-template <DataConsumerConcept Consumer, LimitOrderBookConcept LOB, StrategyConcept<LOB> Strategy>
+template <DataConsumerConcept Consumer, LimitOrderBookConcept LOB,
+          StrategyConcept<LOB> Strategy>
 void MBOSimulationEngine<Consumer, LOB, Strategy>::run() {
   bool reading_feed = true;
 
@@ -106,6 +110,8 @@ void MBOSimulationEngine<Consumer, LOB, Strategy>::run() {
       next_feed_ts = msg.ts_recv.time_since_epoch().count();
     }
 
+    // Process all internal events that occurred BEFORE or AT the incoming
+    // market data timestamp
     while (!network_sim_.get_event_queue().empty() &&
            network_sim_.get_event_queue().top().timestamp_ns <= next_feed_ts) {
       EventV2 ev = network_sim_.get_event_queue().top();
@@ -115,6 +121,7 @@ void MBOSimulationEngine<Consumer, LOB, Strategy>::run() {
       route_internal_event(ev);
     }
 
+    // Apply Market Message
     if (reading_feed) {
       engine_time_ns_ = next_feed_ts;
       switch (msg.action) {
@@ -140,6 +147,9 @@ void MBOSimulationEngine<Consumer, LOB, Strategy>::run() {
         break;
       }
       case databento::Action::Clear: {
+        // We omit Clear from timing metrics because its O(N) memory wipe
+        // will skew our microsecond Hot Path histograms and typically
+        // only happens at market boundaries.
         uint64_t start_tsc = performance::get_tsc();
         lob_.update_book(msg);
         strategy_.on_book_update(engine_time_ns_, start_tsc, lob_);
