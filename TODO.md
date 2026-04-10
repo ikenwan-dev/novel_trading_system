@@ -63,7 +63,6 @@ Candidates often misallocate their time by attempting to build hyper-complex, he
 **The HFT Solution (What you should actually focus on):**
 - **Zero-Allocation Hot Path:** Audit the codebase sequentially. If `DataBentoLOB::update_book` or `MarketMaker::impl_on_book_update` ever call `new`, `malloc`, or trigger a dynamic container resize, replace them with pre-allocated structures.
 - **Lock-Free Logging:** Scrap `std::cout`. Synchronous printing blocks the execution thread. Implement a Single-Producer Single-Consumer (SPSC) ring buffer to asynchronously flush logs via a background thread pinned to a separate CPU core.
-- **Latency Benchmarking:** Elite firms want to see that you measure micro-architecture performance. Instrument your code with hardware timestamp counters (`__rdtsc()`), measure "Tick-to-Trade" latency, and generate nanosecond histograms emphasizing tail latencies (p50, p90, p99, p99.9).
 - **CPU Thread Affinity & Cache Isolation (Linux):** On a Linux deployment, pin the main trading thread to a specific CPU core using `pthread_setaffinity_np`. Furthermore, use the Linux kernel parameter `isolcpus` on boot to physically prevent the OS scheduler from migrating background tasks to your trading core. This guarantees your L1/L2 Cache never gets flushed by a context switch, effectively neutralizing p99 tail latency spikes caused by memory fetch delays.
 - **The README (Your Engineering Whitepaper):** Your README must include an architecture IPC diagram, make explicitly clear your low-latency design tradeoffs, showcase your latency benchmarks, and provide CI/CD testing guarantees perfectly matching feed state.
 
@@ -76,3 +75,26 @@ Standard retail metrics like Sharpe Ratio are "vanity metrics" in HFT. They assu
 - **Inventory-Adjusted PnL:** Calculate your PnL while applying a penalty for the absolute size of your position. This rewards strategies that stay "flat" and punishes those that gamble on long-term directional moves.
 - **Skew Efficiency:** Track **Average Position vs. PnL**. This measures how effectively your quoting skew is attracting the "right" side of the market to flatten your book.
 - **Max Drawdown (MDD) & Recovery Factor:** High-frequency strategies live or die by their tail risk. Focusing on the speed of recovery after a drawdown is a key indicator of strategy robustness.
+
+## 10. End-of-Day Output & "Resume-Ready" Analytics Workflow
+**The Problem:**
+Currently, benchmarking metrics and simulation results are printed to the terminal via `std::cout` after the main loop concludes. While safe from an execution latency standpoint (as it happens entirely outside the hot path), it produces no tangible artifacts. Top-tier quant firms look for candidates who blend strict C++ system engineering with Python-based data analysis. Terminal output alone doesn't sufficiently demonstrate strong analytical capabilities.
+
+**The HFT Solution:**
+1. **Generate Structured Telemetry:** Add a `flush_metrics_to_csv()` routine (or use JSON/HDF5) that executes cleanly at simulator shutdown. This generated artifact must contain:
+   - *Tick-to-Trade Latency Events* (e.g., event ID, latency in nanoseconds).
+   - *PnL and Inventory Time Series* (e.g., timestamp, portfolio value, position size).
+   - *Order Book Snapshots* (e.g., BBO spread over time to measure adverse selection).
+2. **Python Analysis Layer:** Create a `scripts/` or `notebooks/` directory. Write a Python visualization pipeline (using Pandas & Matplotlib/Seaborn) that ingests the C++ artifacts and outputs professional charts:
+   - A heavy-tail latency histogram (highlighting p50, p90, p99, and p99.9).
+   - A concurrent PnL vs Inventory graph showing how well the strategy controls risk.
+3. **The README Pitch:** Embed these Python-generated visualizations directly into the repository `README.md`. This turns your repository into a true "Quant Engineering Whitepaper"—the ultimate differentiator for elite resume reviews.
+
+## 11. API Ergonomics vs. Low-Latency Constraints (High Severity)
+**The Problem:**
+Currently, `main()` (`MappedBackTestEngineExample.cpp`) forces the user to manually instantiate the `EventQueue`, `NetworkSimulator`, `MBORiskManager`, `OrderManagementSystem`, and `VirtualExchange`, and wire them together before passing them to the `MBOSimulationEngine`. This leaks internal infrastructure plumbing to the researcher, who should only care about formulating their `Strategy` and providing a historical `DataConsumer`.
+
+**The HFT Solution (Zero-Cost Facade):**
+1. Do **not** use `std::unique_ptr<Base>`, `std::function`, or `virtual` interfaces to dynamically "hide" these default components. Abstracting them away at runtime will force vtable lookups and destroy the zero-cost abstractions needed for the hot path.
+2. Rely on C++17 Class Template Argument Deduction (CTAD). If you provide the fully wired instances, you can drop the explicit `<ConsumerType, LOBType, StrategyType>` when constructing the `MBOSimulationEngine`.
+3. Build a high-level generic builder, such as `BacktestRunner<Strategy, Consumer>`. The runner allocates the core environment (Risk Manager, Network Simulator, Virtual Exchange) internally and natively. It then passes them securely to the `MBOSimulationEngine`, fully preserving the strict compile-time CRTP type deduction while exposing a beautifully simple, clean API for quantitative researchers.

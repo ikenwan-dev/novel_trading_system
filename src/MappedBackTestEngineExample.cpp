@@ -46,9 +46,8 @@ int main(int argc, char *argv[]) {
 
     // 2. Data Structures
     // Choose your LOB implementation here:
-    using LOBType = DataBentoLOB;
+    using LOBType = OptimizedDataBentoLOB;
     auto lob = std::make_unique<LOBType>();
-
 
     // 3. Risk & OMS
     MBORiskManager risk_manager(200, 1000);
