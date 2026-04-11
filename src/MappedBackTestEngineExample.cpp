@@ -3,6 +3,7 @@
 #include "Events/Mbo/MBOSimulationEngine.h"
 #include "LimitOrderBook/DataBentoLOB/DataBentoLOB.h"
 #include "LimitOrderBook/DataBentoLOB/OptimizedDataBentoLOB.h"
+#include "LimitOrderBook/DataBentoLOB/DirectArrayLOB.h"
 #include "NetworkSimulator/NetworkSimulator.h"
 #include "OrderManagementSystem/OrderManagementSystem.h"
 #include "Performance/LatencyProfiler.h"
@@ -46,8 +47,11 @@ int main(int argc, char *argv[]) {
 
     // 2. Data Structures
     // Choose your LOB implementation here:
-    using LOBType = OptimizedDataBentoLOB;
-    auto lob = std::make_unique<LOBType>();
+    using LOBType = DirectArrayLOB;
+    // Example tick size for NAS/NQ/ES. Assuming 1 cent tick size = 0.01 * 1e9 = 10000000 
+    // or NQ is 0.25 = 250000000. For NASDAQ equities it's often 10000000. Let's use 10000000 for standard equities.
+    int64_t assumed_tick_size = 10000000; 
+    auto lob = std::make_unique<LOBType>(assumed_tick_size);
 
     // 3. Risk & OMS
     MBORiskManager risk_manager(200, 1000);

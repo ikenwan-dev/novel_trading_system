@@ -33,13 +33,6 @@ In `MarketMaker.h`, you use `std::optional<uint64_t> active_bid_id_;`. `std::opt
 **The HFT Solution:**
 Memory alignment matters when trying to fit strategy state into a 64-byte L1 Cache Line. Use a sentinel/magic value instead (e.g., `constexpr uint64_t NO_ORDER = UINT64_MAX;`) to avoid relying on `std::optional` bloat.
 
-## 5. Virtual Function Pass-Through in the Core Spin Loop (Critical Severity)
-**The Problem:**
-In `MBOSimulationEngine.h`, you take `DataConsumer& consumer_` by reference and call `consumer_.try_poll(msg)` inside the absolute tightest `while` spin loop of your matching engine. Because `DataConsumer::try_poll` is a `virtual` function, every single tick evaluated requires an indirect vtable pointer dereference. This breaks your ability to aggressively pipeline instructions and defeats the L1 instruction cache entirely. It is a paradox because you successfully used CRTP/Templates for `strategy_`, but left the `consumer_` dynamically dispatched!
-
-**The HFT Solution:**
-Turn `MBOSimulationEngine` into a multi-templated class `template <typename Strategy, typename DataConsumerT>`. Pass the consumer in as a static template argument. This statically binds the data feed loop, allowing the compiler to violently inline `try_poll` right into the spin loop.
-
 ## 6. `std::priority_queue` over `std::vector` inside the Core Engine (High Severity)
 **The Problem:**
 Your `EventQueue` in `MboEvent.h` uses a `std::priority_queue<EventV2, std::vector<EventV2>>`. If there is a spike in events, the underlying `std::vector` will dynamically resize (`malloc`/`new`), incurring catastrophic OS-level allocation stalls in the middle of a simulation tick. Furthermore, traversing the standard binary heap is $O(\log N)$ and can cause poor cache utilization given the randomly distributed index hops.
