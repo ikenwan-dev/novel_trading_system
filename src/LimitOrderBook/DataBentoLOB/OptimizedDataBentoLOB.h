@@ -4,16 +4,16 @@
 #include <cstdint>
 #include <databento/enums.hpp>
 #include <databento/record.hpp>
-#include <vector>
 #include <utility>
+#include <vector>
 
 namespace backtesting_engine::mbo {
 
 /**
  * @brief An Optimized, Zero-Allocation Limit Order Book for Databento MBO data.
- * 
- * Uses an Intrusive OrderPool for FIFO order management and a custom 
- * FlatHashMap for fast Order ID lookups. This implementation avoids all 
+ *
+ * Uses an Intrusive OrderPool for FIFO order management and a custom
+ * FlatHashMap for fast Order ID lookups. This implementation avoids all
  * heap allocations in the hot path.
  */
 class OptimizedDataBentoLOB {
@@ -24,7 +24,7 @@ public:
 
   OptimizedDataBentoLOB();
 
-  struct OrderNode {
+  struct alignas(64) OrderNode {
     databento::MboMsg msg;
     int32_t next_idx = -1;
     int32_t prev_idx = -1;
@@ -57,11 +57,12 @@ private:
   void modify_order(const databento::MboMsg &msg);
   void clear_book();
 
-  std::vector<PriceLevel>& get_side(databento::Side side);
-  const std::vector<PriceLevel>& get_side(databento::Side side) const;
-  
+  std::vector<PriceLevel> &get_side(databento::Side side);
+  const std::vector<PriceLevel> &get_side(databento::Side side) const;
+
   // Helper for O(log N) price level lookup
-  PriceLevel* find_price_level(std::vector<PriceLevel>& side, int64_t price, bool is_bid);
+  PriceLevel *find_price_level(std::vector<PriceLevel> &side, int64_t price,
+                               bool is_bid);
 };
 
 } // namespace backtesting_engine::mbo
