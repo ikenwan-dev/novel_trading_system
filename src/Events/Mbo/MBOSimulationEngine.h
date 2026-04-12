@@ -126,9 +126,7 @@ void MBOSimulationEngine<Consumer, LOB, Strategy>::run() {
           metric = performance::Metric::LOB_MODIFY;
         }
 
-        profiler_.record_latency(
-            metric,
-            performance::TSC_Clock::tsc_to_nanoseconds(end_tsc - start_tsc));
+        profiler_.record_latency(metric, end_tsc - start_tsc);
 
         strategy_.on_book_update(engine_time_ns_, start_tsc, lob_);
         break;

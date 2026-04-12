@@ -73,17 +73,25 @@ private:
 // --- Implementation ---
 
 namespace detail {
-  template <class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
-  template <class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
-}
+template <class... Ts> struct overloaded : Ts... {
+  using Ts::operator()...;
+};
+template <class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
+} // namespace detail
 
 template <LimitOrderBookConcept LOB>
 void VirtualExchange<LOB>::on_update(const EventV2 &event) {
-  std::visit(detail::overloaded{
-      [&](const CreateOrderEvent &e) { on_create_order(event.timestamp_ns, e); },
-      [&](const CancelOrderEvent &e) { on_cancel_order(event.timestamp_ns, e); },
-      [](const auto &) { throw std::runtime_error{"Unsupported event type!"}; }
-  }, event.payload);
+  std::visit(detail::overloaded{[&](const CreateOrderEvent &e) {
+                                  on_create_order(event.timestamp_ns, e);
+                                },
+                                [&](const CancelOrderEvent &e) {
+                                  on_cancel_order(event.timestamp_ns, e);
+                                },
+                                [](const auto &) {
+                                  throw std::runtime_error{
+                                      "Unsupported event type!"};
+                                }},
+             event.payload);
 }
 
 template <LimitOrderBookConcept LOB>
@@ -129,15 +137,16 @@ void VirtualExchange<LOB>::on_create_order(uint64_t timestamp_ns,
       int32_t prev_idx = -1;
 
       // --- ARCHITECTURE DECISION: O(N) Insertion vs O(1) Arrays ---
-      // We explicitly choose a linear O(N) insertion here to maintain an intrusive 
-      // doubly-linked list. While a Direct-Mapped Array + Hierarchical Bitmask would 
-      // yield O(1) insertions, it would force on_fill() to unnecessarily scan across
-      // potentially massive empty price gaps. Since this is the *Virtual* Exchange, 
-      // we assume the user's strategy maintains a small number of active price levels 
-      // (e.g., N < 50) tightly around the BBO. At this scale, the O(N) insertion adds 
-      // only a few nanoseconds, while delivering O(1) jump-to-next-active-level
+      // We explicitly choose a linear O(N) insertion here to maintain an
+      // intrusive doubly-linked list. While a Direct-Mapped Array +
+      // Hierarchical Bitmask would yield O(1) insertions, it would force
+      // on_fill() to unnecessarily scan across potentially massive empty price
+      // gaps. Since this is the *Virtual* Exchange, we assume the user's
+      // strategy maintains a small number of active price levels (e.g., N < 50)
+      // tightly around the BBO. At this scale, the O(N) insertion adds only a
+      // few nanoseconds, while delivering O(1) jump-to-next-active-level
       // performance during latency-critical market data sweeps.
-      // 
+      //
       // Bids are sorted descending (highest price first)
       // Asks are sorted ascending (lowest price first)
       while (curr_idx != -1) {
@@ -202,9 +211,8 @@ void VirtualExchange<LOB>::on_create_order(uint64_t timestamp_ns,
       {timestamp_ns, AckCreateOrderEvent{event.order_id}});
 
   uint64_t end_tsc = performance::get_tsc();
-  sim_profiler_.record_latency(
-      performance::SimMetric::VEX_ORDER_ADD,
-      performance::TSC_Clock::tsc_to_nanoseconds(end_tsc - start_tsc));
+  sim_profiler_.record_latency(performance::SimMetric::VEX_ORDER_ADD,
+                               end_tsc - start_tsc);
 }
 
 template <LimitOrderBookConcept LOB>
@@ -218,9 +226,8 @@ void VirtualExchange<LOB>::on_cancel_order(uint64_t timestamp_ns,
         {timestamp_ns, AckCancelOrderEvent{event.order_id}});
 
     uint64_t end_tsc = performance::get_tsc();
-    sim_profiler_.record_latency(
-        performance::SimMetric::VEX_ORDER_CANCEL,
-        performance::TSC_Clock::tsc_to_nanoseconds(end_tsc - start_tsc));
+    sim_profiler_.record_latency(performance::SimMetric::VEX_ORDER_CANCEL,
+                                 end_tsc - start_tsc);
     return;
   }
 
@@ -260,9 +267,8 @@ void VirtualExchange<LOB>::on_cancel_order(uint64_t timestamp_ns,
   simulator_.send_inbound_event({timestamp_ns, AckCancelOrderEvent{ev_ord_id}});
 
   uint64_t end_tsc = performance::get_tsc();
-  sim_profiler_.record_latency(
-      performance::SimMetric::VEX_ORDER_CANCEL,
-      performance::TSC_Clock::tsc_to_nanoseconds(end_tsc - start_tsc));
+  sim_profiler_.record_latency(performance::SimMetric::VEX_ORDER_CANCEL,
+                               end_tsc - start_tsc);
 }
 
 template <LimitOrderBookConcept LOB>
@@ -318,9 +324,8 @@ void VirtualExchange<LOB>::on_fill(const databento::MboMsg &msg) {
   }
 
   uint64_t end_tsc = performance::get_tsc();
-  sim_profiler_.record_latency(
-      performance::SimMetric::VEX_MATCHING,
-      performance::TSC_Clock::tsc_to_nanoseconds(end_tsc - start_tsc));
+  sim_profiler_.record_latency(performance::SimMetric::VEX_MATCHING,
+                               end_tsc - start_tsc);
 }
 
 template <LimitOrderBookConcept LOB>

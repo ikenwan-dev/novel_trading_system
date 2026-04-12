@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Performance/TSC_Clock.h"
 #include <algorithm>
 #include <array>
 #include <cstdint>
@@ -21,10 +22,10 @@ public:
     }
   }
 
-  inline void record_latency(Metric type, uint64_t latency_ns) {
+  inline void record_latency(Metric type, uint64_t latency_cycles) {
     auto &vec = latencies_[static_cast<int>(type)];
     if (vec.size() < vec.capacity()) {
-      vec.push_back(latency_ns);
+      vec.push_back(latency_cycles);
     }
     // Note: To remain absolutely allocation-free, we simply drop telemetry
     // if the massive pre-allocated bounds are exceeded rather than returning to
@@ -77,12 +78,15 @@ private:
 
     std::cout << "[" << name << "]\n";
     std::cout << "  Samples: " << vec.size() << "\n";
-    std::cout << "  Mean:    " << mean << " ns\n";
-    std::cout << "  P50:     " << p50 << " ns\n";
-    std::cout << "  P90:     " << p90 << " ns\n";
-    std::cout << "  P99:     " << p99 << " ns\n";
-    std::cout << "  P99.9:   " << p99_9 << " ns\n";
-    std::cout << "  Max:     " << max_val << " ns\n\n";
+    std::cout << "  Mean:    " << TSC_Clock::tsc_to_nanoseconds(mean)
+              << " ns\n";
+    std::cout << "  P50:     " << TSC_Clock::tsc_to_nanoseconds(p50) << " ns\n";
+    std::cout << "  P90:     " << TSC_Clock::tsc_to_nanoseconds(p90) << " ns\n";
+    std::cout << "  P99:     " << TSC_Clock::tsc_to_nanoseconds(p99) << " ns\n";
+    std::cout << "  P99.9:   " << TSC_Clock::tsc_to_nanoseconds(p99_9)
+              << " ns\n";
+    std::cout << "  Max:     " << TSC_Clock::tsc_to_nanoseconds(max_val)
+              << " ns\n\n";
   }
 
   std::array<std::vector<uint64_t>, static_cast<int>(Metric::COUNT)> latencies_;

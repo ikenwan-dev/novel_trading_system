@@ -1,9 +1,9 @@
+#include "LimitOrderBook/LimitOrderBookConcept.h"
 #include "OrderManagementSystem/OrderManagementSystem.h"
 #include "Performance/LatencyProfiler.h"
 #include "Performance/TSC_Clock.h"
 #include "RiskManager/Mbo/RiskResult.h"
 #include <databento/record.hpp>
-#include "LimitOrderBook/LimitOrderBookConcept.h"
 
 namespace backtesting_engine::mbo {
 template <typename Derived> class MBOStrategyBase {
@@ -50,8 +50,7 @@ public:
     if (profiler_) {
       uint64_t end_tsc = performance::get_tsc();
       profiler_->record_latency(performance::Metric::TICK_TO_TRADE,
-                                performance::TSC_Clock::tsc_to_nanoseconds(
-                                    end_tsc - current_start_tsc_));
+                                end_tsc - current_start_tsc_);
     }
     return res;
   }
@@ -61,8 +60,7 @@ public:
     if (profiler_) {
       uint64_t end_tsc = performance::get_tsc();
       profiler_->record_latency(performance::Metric::TICK_TO_TRADE,
-                                performance::TSC_Clock::tsc_to_nanoseconds(
-                                    end_tsc - current_start_tsc_));
+                                end_tsc - current_start_tsc_);
     }
   }
 };
