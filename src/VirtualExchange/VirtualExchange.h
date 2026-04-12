@@ -1,25 +1,17 @@
 #pragma once
+#include "Common/Containers/FlatHashMap.h"
+#include "Common/Containers/ObjectPool.h"
 #include "Events/Mbo/MboEvent.h"
 #include "LimitOrderBook/LimitOrderBookConcept.h"
 #include "NetworkSimulator/NetworkSimulator.h"
 #include "Performance/SimulationProfiler.h"
 #include "Performance/TSC_Clock.h"
-#include <algorithm>
 #include <databento/record.hpp>
-#include <map>
 #include <stdexcept>
 #include <string>
-#include <unordered_map>
-#include <vector>
 
 namespace backtesting_engine::mbo {
 
-/**
- * @brief Matches user orders against incoming market data (MBO).
- *
- * Generic over the LimitOrderBook implementation to allow for static
- * polymorphism and aggressive compiler inlining.
- */
 template <LimitOrderBookConcept LOB> class VirtualExchange {
 public:
   VirtualExchange(NetworkSimulator &simulator, LOB &lob,
@@ -30,44 +22,46 @@ public:
   void on_update(const EventV2 &event);
 
 private:
-  template <typename LevelIterator>
-  void
-  fill_orders_at_price_level(LevelIterator &levels_it, uint64_t &fill_qty_left,
-                             uint64_t timestamp_ns, int64_t actual_fill_price);
-
-  struct VirtualOrderMetaData {
-    databento::Side side;
-    int64_t price;
-  };
-
   struct VirtualOrder {
     uint64_t order_id;
+    databento::Side side;
+    int64_t price;
     uint64_t qty_ahead;
     uint64_t remaining_qty;
     uint64_t original_qty;
+    int32_t prev_order_idx = -1;
+    int32_t next_order_idx = -1;
   };
 
-  std::unordered_map<uint64_t, VirtualOrderMetaData> order_metadata_;
+  struct VirtualPriceLevel {
+    int64_t price;
+    databento::Side side;
+    int32_t prev_level_idx = -1;
+    int32_t next_level_idx = -1;
+    int32_t head_order_idx = -1;
+    int32_t tail_order_idx = -1;
+    uint64_t total_qty_ahead = 0;
+  };
+
+  void fill_orders_at_price_level(int32_t level_idx, uint64_t &fill_qty_left,
+                                  uint64_t timestamp_ns,
+                                  int64_t actual_fill_price);
+
+  void erase_level(int32_t level_idx);
+
   NetworkSimulator &simulator_;
   LOB &lob_;
   performance::SimulationProfiler &sim_profiler_;
 
-  struct VirtualPriceLevel {
-    std::vector<VirtualOrder> orders;
-    uint64_t total_qty_ahead = 0;
-  };
+  common::FlatHashMap<uint64_t, int32_t, 8192> order_idx_map_;
+  common::FlatHashMap<int64_t, int32_t, 2048> buy_level_idx_map_;
+  common::FlatHashMap<int64_t, int32_t, 2048> sell_level_idx_map_;
 
-  using VirtualPriceLevels = std::map<int64_t, VirtualPriceLevel>;
-  VirtualPriceLevels open_buy_orders_;  // key is price
-  VirtualPriceLevels open_sell_orders_; // key is price
+  common::ObjectPool<VirtualOrder, 8192> order_pool_;
+  common::ObjectPool<VirtualPriceLevel, 2048> level_pool_;
 
-  VirtualPriceLevels &get_side(databento::Side side);
-
-  typename VirtualPriceLevels::iterator
-  get_price_level(VirtualPriceLevels &levels, int64_t price);
-
-  typename std::vector<VirtualOrder>::iterator
-  get_order(VirtualPriceLevel &level, uint64_t order_id);
+  int32_t best_bid_level_idx_ = -1;
+  int32_t best_ask_level_idx_ = -1;
 
   void on_create_order(uint64_t timestamp_ns, const CreateOrderEvent &event);
   void on_cancel_order(uint64_t timestamp_ns, const CancelOrderEvent &event);
@@ -93,23 +87,103 @@ template <LimitOrderBookConcept LOB>
 void VirtualExchange<LOB>::on_create_order(uint64_t timestamp_ns,
                                            const CreateOrderEvent &event) {
   uint64_t start_tsc = performance::get_tsc();
-  if (order_metadata_.find(event.order_id) != order_metadata_.end()) {
+
+  if (order_idx_map_.find(event.order_id) != -1) {
     throw std::runtime_error{"Order already exists"};
   }
 
-  VirtualPriceLevels &levels = get_side(event.side);
   uint64_t qty_ahead = lob_.get_level_qty(event.side, event.price);
 
-  auto it = levels.find(event.price);
-  if (it != levels.end()) {
-    qty_ahead -= it->second.total_qty_ahead;
+  auto &level_map = (event.side == databento::Side::Bid) ? buy_level_idx_map_
+                                                         : sell_level_idx_map_;
+  int32_t level_idx = level_map.find(event.price);
+
+  if (level_idx != -1) {
+    qty_ahead -= level_pool_[level_idx].total_qty_ahead;
+  } else {
+    // Create new level
+    level_idx = level_pool_.allocate();
+    auto &level = level_pool_[level_idx];
+    level.price = event.price;
+    level.side = event.side;
+    level.prev_level_idx = -1;
+    level.next_level_idx = -1;
+    level.head_order_idx = -1;
+    level.tail_order_idx = -1;
+    level.total_qty_ahead = 0;
+
+    level_map.insert(event.price, level_idx);
+
+    // Insert into sorted list
+    int32_t *best_level_idx_ptr = (event.side == databento::Side::Bid)
+                                      ? &best_bid_level_idx_
+                                      : &best_ask_level_idx_;
+
+    if (*best_level_idx_ptr == -1) {
+      *best_level_idx_ptr = level_idx;
+    } else {
+      int32_t curr_idx = *best_level_idx_ptr;
+      int32_t prev_idx = -1;
+
+      // Bids are sorted descending (highest price first)
+      // Asks are sorted ascending (lowest price first)
+      while (curr_idx != -1) {
+        bool should_insert = false;
+        if (event.side == databento::Side::Bid) {
+          should_insert = event.price > level_pool_[curr_idx].price;
+        } else {
+          should_insert = event.price < level_pool_[curr_idx].price;
+        }
+
+        if (should_insert) {
+          break;
+        }
+        prev_idx = curr_idx;
+        curr_idx = level_pool_[curr_idx].next_level_idx;
+      }
+
+      // Insert between prev_idx and curr_idx
+      level.next_level_idx = curr_idx;
+      level.prev_level_idx = prev_idx;
+
+      if (curr_idx != -1) {
+        level_pool_[curr_idx].prev_level_idx = level_idx;
+      }
+
+      if (prev_idx != -1) {
+        level_pool_[prev_idx].next_level_idx = level_idx;
+      } else {
+        *best_level_idx_ptr = level_idx; // New best price
+      }
+    }
   }
 
-  levels[event.price].orders.emplace_back(event.order_id, qty_ahead, event.qty,
-                                          event.qty);
-  levels[event.price].total_qty_ahead += qty_ahead;
-  order_metadata_.emplace(event.order_id,
-                          VirtualOrderMetaData{event.side, event.price});
+  // Create Order
+  int32_t order_idx = order_pool_.allocate();
+  auto &order = order_pool_[order_idx];
+  order.order_id = event.order_id;
+  order.side = event.side;
+  order.price = event.price;
+  order.qty_ahead = qty_ahead;
+  order.remaining_qty = event.qty;
+  order.original_qty = event.qty;
+  order.prev_order_idx = -1;
+  order.next_order_idx = -1;
+
+  order_idx_map_.insert(event.order_id, order_idx);
+
+  // Link Order to Level
+  auto &level = level_pool_[level_idx];
+  level.total_qty_ahead += qty_ahead;
+
+  if (level.tail_order_idx == -1) {
+    level.head_order_idx = order_idx;
+    level.tail_order_idx = order_idx;
+  } else {
+    order.prev_order_idx = level.tail_order_idx;
+    order_pool_[level.tail_order_idx].next_order_idx = order_idx;
+    level.tail_order_idx = order_idx;
+  }
 
   simulator_.send_inbound_event(
       {timestamp_ns, AckCreateOrderEvent{event.order_id}});
@@ -124,8 +198,9 @@ template <LimitOrderBookConcept LOB>
 void VirtualExchange<LOB>::on_cancel_order(uint64_t timestamp_ns,
                                            const CancelOrderEvent &event) {
   uint64_t start_tsc = performance::get_tsc();
-  auto order_metadata_it = order_metadata_.find(event.order_id);
-  if (order_metadata_it == order_metadata_.end()) {
+
+  int32_t order_idx = order_idx_map_.find(event.order_id);
+  if (order_idx == -1) {
     simulator_.send_inbound_event(
         {timestamp_ns, AckCancelOrderEvent{event.order_id}});
 
@@ -136,27 +211,40 @@ void VirtualExchange<LOB>::on_cancel_order(uint64_t timestamp_ns,
     return;
   }
 
-  int64_t price = order_metadata_it->second.price;
-  VirtualPriceLevels &levels = get_side(order_metadata_it->second.side);
-  auto level_it = get_price_level(levels, price);
-  VirtualPriceLevel &level = level_it->second;
+  auto &order = order_pool_[order_idx];
+  auto &level_map = (order.side == databento::Side::Bid) ? buy_level_idx_map_
+                                                         : sell_level_idx_map_;
+  int32_t level_idx = level_map.find(order.price);
+  auto &level = level_pool_[level_idx];
 
-  auto order_it = get_order(level, event.order_id);
-  auto next_order_it = std::next(order_it);
-  if (next_order_it != level.orders.end()) {
-    next_order_it->qty_ahead += order_it->qty_ahead;
+  if (order.next_order_idx != -1) {
+    order_pool_[order.next_order_idx].qty_ahead += order.qty_ahead;
   } else {
-    level.total_qty_ahead -= order_it->qty_ahead;
+    level.total_qty_ahead -= order.qty_ahead;
   }
 
-  level.orders.erase(order_it);
-  if (level.orders.empty()) {
-    levels.erase(level_it);
+  // Remove order from level's doubly linked list
+  if (order.prev_order_idx != -1) {
+    order_pool_[order.prev_order_idx].next_order_idx = order.next_order_idx;
+  } else {
+    level.head_order_idx = order.next_order_idx;
   }
 
-  order_metadata_.erase(order_metadata_it);
-  simulator_.send_inbound_event(
-      {timestamp_ns, AckCancelOrderEvent{event.order_id}});
+  if (order.next_order_idx != -1) {
+    order_pool_[order.next_order_idx].prev_order_idx = order.prev_order_idx;
+  } else {
+    level.tail_order_idx = order.prev_order_idx;
+  }
+
+  uint64_t ev_ord_id = event.order_id;
+  order_idx_map_.erase(ev_ord_id);
+  order_pool_.deallocate(order_idx);
+
+  if (level.head_order_idx == -1) {
+    erase_level(level_idx);
+  }
+
+  simulator_.send_inbound_event({timestamp_ns, AckCancelOrderEvent{ev_ord_id}});
 
   uint64_t end_tsc = performance::get_tsc();
   sim_profiler_.record_latency(
@@ -165,27 +253,54 @@ void VirtualExchange<LOB>::on_cancel_order(uint64_t timestamp_ns,
 }
 
 template <LimitOrderBookConcept LOB>
+void VirtualExchange<LOB>::erase_level(int32_t level_idx) {
+  auto &level = level_pool_[level_idx];
+  auto &level_map = (level.side == databento::Side::Bid) ? buy_level_idx_map_
+                                                         : sell_level_idx_map_;
+
+  if (level.prev_level_idx != -1) {
+    level_pool_[level.prev_level_idx].next_level_idx = level.next_level_idx;
+  } else {
+    if (level.side == databento::Side::Bid) {
+      best_bid_level_idx_ = level.next_level_idx;
+    } else {
+      best_ask_level_idx_ = level.next_level_idx;
+    }
+  }
+
+  if (level.next_level_idx != -1) {
+    level_pool_[level.next_level_idx].prev_level_idx = level.prev_level_idx;
+  }
+
+  level_map.erase(level.price);
+  level_pool_.deallocate(level_idx);
+}
+
+template <LimitOrderBookConcept LOB>
 void VirtualExchange<LOB>::on_fill(const databento::MboMsg &msg) {
   uint64_t start_tsc = performance::get_tsc();
-  VirtualPriceLevels &levels = get_side(msg.side);
   uint64_t fill_qty_left = msg.size;
   uint64_t timestamp_ns = msg.ts_recv.time_since_epoch().count();
 
   if (msg.side == databento::Side::Bid) {
-    auto levels_it = levels.rbegin();
-    while (levels_it != levels.rend() && levels_it->first >= msg.price &&
-           fill_qty_left) {
-      fill_orders_at_price_level(levels_it, fill_qty_left, timestamp_ns,
+    int32_t curr_level_idx = best_bid_level_idx_;
+    // Bids are sorted descending. So we iterate while level_price >= msg.price
+    while (curr_level_idx != -1 &&
+           level_pool_[curr_level_idx].price >= msg.price && fill_qty_left) {
+      int32_t next_level_idx = level_pool_[curr_level_idx].next_level_idx;
+      fill_orders_at_price_level(curr_level_idx, fill_qty_left, timestamp_ns,
                                  msg.price);
-      levels_it++;
+      curr_level_idx = next_level_idx;
     }
   } else {
-    auto levels_it = levels.begin();
-    while (levels_it != levels.end() && levels_it->first <= msg.price &&
-           fill_qty_left) {
-      fill_orders_at_price_level(levels_it, fill_qty_left, timestamp_ns,
+    int32_t curr_level_idx = best_ask_level_idx_;
+    // Asks are sorted ascending. So we iterate while level_price <= msg.price
+    while (curr_level_idx != -1 &&
+           level_pool_[curr_level_idx].price <= msg.price && fill_qty_left) {
+      int32_t next_level_idx = level_pool_[curr_level_idx].next_level_idx;
+      fill_orders_at_price_level(curr_level_idx, fill_qty_left, timestamp_ns,
                                  msg.price);
-      levels_it++;
+      curr_level_idx = next_level_idx;
     }
   }
 
@@ -196,79 +311,69 @@ void VirtualExchange<LOB>::on_fill(const databento::MboMsg &msg) {
 }
 
 template <LimitOrderBookConcept LOB>
-VirtualExchange<LOB>::VirtualPriceLevels &
-VirtualExchange<LOB>::get_side(databento::Side side) {
-  return (side == databento::Side::Bid) ? open_buy_orders_ : open_sell_orders_;
-}
-
-template <LimitOrderBookConcept LOB>
-typename VirtualExchange<LOB>::VirtualPriceLevels::iterator
-VirtualExchange<LOB>::get_price_level(VirtualPriceLevels &levels,
-                                      int64_t price) {
-  auto level_it = levels.find(price);
-  if (level_it == levels.end()) {
-    throw std::runtime_error{"Level with price: " + std::to_string(price) +
-                             " does not exist"};
-  }
-  return level_it;
-}
-
-template <LimitOrderBookConcept LOB>
-typename std::vector<typename VirtualExchange<LOB>::VirtualOrder>::iterator
-VirtualExchange<LOB>::get_order(VirtualPriceLevel &level, uint64_t order_id) {
-  auto order_it = std::find_if(level.orders.begin(), level.orders.end(),
-                               [order_id](const VirtualOrder &order) {
-                                 return order.order_id == order_id;
-                               });
-  if (order_it == level.orders.end()) {
-    throw std::runtime_error{"Order with id " + std::to_string(order_id) +
-                             " does not exist in level"};
-  }
-  return order_it;
-}
-
-template <LimitOrderBookConcept LOB>
-template <typename LevelIterator>
 void VirtualExchange<LOB>::fill_orders_at_price_level(
-    LevelIterator &levels_it, uint64_t &fill_qty_left, uint64_t timestamp_ns,
+    int32_t level_idx, uint64_t &fill_qty_left, uint64_t timestamp_ns,
     int64_t actual_fill_price) {
-  auto level_it = levels_it->second.orders.begin();
-  while (level_it != levels_it->second.orders.end() && fill_qty_left) {
-    if (level_it->qty_ahead < fill_qty_left) {
-      fill_qty_left -= level_it->qty_ahead;
-      levels_it->second.total_qty_ahead -= level_it->qty_ahead;
-      level_it->qty_ahead = 0;
+  auto &level = level_pool_[level_idx];
+  int32_t curr_order_idx = level.head_order_idx;
+
+  while (curr_order_idx != -1 && fill_qty_left) {
+    auto &order = order_pool_[curr_order_idx];
+    int32_t next_order_idx = order.next_order_idx;
+
+    if (order.qty_ahead < fill_qty_left) {
+      fill_qty_left -= order.qty_ahead;
+      level.total_qty_ahead -= order.qty_ahead;
+      order.qty_ahead = 0;
     } else {
-      level_it->qty_ahead -= fill_qty_left;
-      levels_it->second.total_qty_ahead -= fill_qty_left;
+      order.qty_ahead -= fill_qty_left;
+      level.total_qty_ahead -= fill_qty_left;
       fill_qty_left = 0;
     }
 
     uint64_t filled_qty = 0;
-    if (level_it->qty_ahead == 0 && fill_qty_left) {
-      if (level_it->remaining_qty >= fill_qty_left) {
+    if (order.qty_ahead == 0 && fill_qty_left) {
+      if (order.remaining_qty >= fill_qty_left) {
         filled_qty = fill_qty_left;
-        level_it->remaining_qty -= fill_qty_left;
+        order.remaining_qty -= fill_qty_left;
         fill_qty_left = 0;
       } else {
-        filled_qty = level_it->remaining_qty;
-        fill_qty_left -= level_it->remaining_qty;
-        level_it->remaining_qty = 0;
+        filled_qty = order.remaining_qty;
+        fill_qty_left -= order.remaining_qty;
+        order.remaining_qty = 0;
       }
     }
 
     if (filled_qty) {
       simulator_.send_inbound_event(
-          {timestamp_ns, AckFillOrderEvent{level_it->order_id, filled_qty,
-                                           actual_fill_price}});
+          {timestamp_ns,
+           AckFillOrderEvent{order.order_id, filled_qty, actual_fill_price}});
     }
 
-    if (level_it->remaining_qty == 0) {
-      order_metadata_.erase(level_it->order_id);
-      level_it = levels_it->second.orders.erase(level_it);
-    } else {
-      level_it++;
+    if (order.remaining_qty == 0) {
+      uint64_t ord_id = order.order_id;
+      // Unlink order
+      if (order.prev_order_idx != -1) {
+        order_pool_[order.prev_order_idx].next_order_idx = order.next_order_idx;
+      } else {
+        level.head_order_idx = order.next_order_idx;
+      }
+
+      if (order.next_order_idx != -1) {
+        order_pool_[order.next_order_idx].prev_order_idx = order.prev_order_idx;
+      } else {
+        level.tail_order_idx = order.prev_order_idx;
+      }
+
+      order_idx_map_.erase(ord_id);
+      order_pool_.deallocate(curr_order_idx);
     }
+
+    curr_order_idx = next_order_idx;
+  }
+
+  if (level.head_order_idx == -1) {
+    erase_level(level_idx);
   }
 }
 

@@ -47,9 +47,9 @@ int main(int argc, char *argv[]) {
 
     // 2. Data Structures
     // Choose your LOB implementation here:
-    // Example tick size for NAS/NQ/ES. Assuming 1 cent tick size = 0.01 * 1e9 =
-    // 10000000
-    static constexpr int64_t assumed_tick_size = 10000000;
+    // Example tick size for NAS/NQ/ES. Assuming .1 cent tick size = 0.001 * 1e9
+    // = 1000000
+    static constexpr int64_t assumed_tick_size = 100000;
     using LOBType = DirectArrayLOB<assumed_tick_size>;
     auto lob = std::make_unique<LOBType>();
 

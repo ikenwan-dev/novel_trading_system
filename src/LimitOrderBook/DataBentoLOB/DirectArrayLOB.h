@@ -24,7 +24,7 @@ public:
   static constexpr size_t MAX_ORDERS = 1000000;
   static constexpr size_t ID_MAP_CAPACITY = 2097152; // 2^21
   static constexpr size_t LOB_CAPACITY =
-      1048576; // 2^20 (covers $10k range at 1-cent tick)
+      8388608; // 2^23 (covers $838 span at $0.0001 tick)
 
   DirectArrayLOB();
 
@@ -51,6 +51,7 @@ private:
   // Cached BBO to avoid scanning when the book is stable
   mutable int64_t best_bid_ = databento::kUndefPrice;
   mutable int64_t best_ask_ = databento::kUndefPrice;
+  int64_t base_price_ = databento::kUndefPrice;
 
   // Pools
   common::ObjectPool<OrderNode, MAX_ORDERS> order_pool_;
@@ -60,10 +61,21 @@ private:
   std::array<PriceLevel, LOB_CAPACITY> bids_{};
   std::array<PriceLevel, LOB_CAPACITY> asks_{};
 
-  // Highly optimized bitwise modulo function. Division by constant will be
-  // optimized.
   inline size_t price_to_index(int64_t price) const {
-    return static_cast<size_t>((price / TickSize) & (LOB_CAPACITY - 1));
+    if (__builtin_expect(base_price_ == databento::kUndefPrice, 0)) {
+      return LOB_CAPACITY / 2; // Should never happen unless bad message routing
+    }
+    int64_t diff = (price - base_price_) / TickSize;
+    int64_t idx = static_cast<int64_t>(LOB_CAPACITY / 2) + diff;
+
+    // Strict bounds check replacing the circular wrap
+    if (__builtin_expect(idx < 0 || idx >= static_cast<int64_t>(LOB_CAPACITY),
+                         0)) {
+      // Drop extreme prices (routing errors, stub sweeps, or multi-symbol
+      // pollution)
+      return std::numeric_limits<size_t>::max();
+    }
+    return static_cast<size_t>(idx);
   }
 
   void add_order(const databento::MboMsg &msg);
@@ -127,8 +139,12 @@ inline std::pair<int64_t, int64_t> DirectArrayLOB<TickSize>::get_bbo() const {
 template <int64_t TickSize>
 inline uint64_t DirectArrayLOB<TickSize>::get_level_qty(databento::Side side,
                                                         int64_t price) const {
-  const auto &arr = get_side_array(side);
   size_t idx = price_to_index(price);
+  if (idx == std::numeric_limits<size_t>::max()) {
+    return 0;
+  }
+
+  const auto &arr = get_side_array(side);
 
   if (arr[idx].price == price) {
     return arr[idx].total_qty;
@@ -155,14 +171,25 @@ inline void DirectArrayLOB<TickSize>::add_order(const databento::MboMsg &msg) {
     }
   }
 
-  auto &arr = get_side_array(msg.side);
+  // Anchor the array to the first valid price we see for the day
+  if (__builtin_expect(base_price_ == databento::kUndefPrice, 0)) {
+    base_price_ = msg.price;
+  }
+
   size_t idx = price_to_index(msg.price);
+  if (__builtin_expect(idx == std::numeric_limits<size_t>::max(), 0)) {
+    return; // Gracefully drop out-of-bounds routing
+  }
+
+  auto &arr = get_side_array(msg.side);
   PriceLevel &level = arr[idx];
 
   // Prevent silent LOB corruption: Crash if a bucket collision occurs.
   if (level.total_qty > 0 && level.price != msg.price) {
-    throw std::runtime_error(
-        "DirectArrayLOB Collision: Price span exceeded LOB_CAPACITY!");
+    throw std::runtime_error("DirectArrayLOB Collision: Price span exceeded "
+                             "LOB_CAPACITY! Existing Level Price: " +
+                             std::to_string(level.price) +
+                             " New Msg Price: " + std::to_string(msg.price));
   }
 
   if (level.total_qty == 0) {
@@ -204,8 +231,12 @@ DirectArrayLOB<TickSize>::cancel_order(const databento::MboMsg &msg) {
     return;
 
   OrderNode &node = order_pool_[node_idx];
-  auto &arr = get_side_array(node.msg.side);
   size_t idx = price_to_index(node.msg.price);
+  if (__builtin_expect(idx == std::numeric_limits<size_t>::max(), 0)) {
+    return;
+  }
+
+  auto &arr = get_side_array(node.msg.side);
   PriceLevel &level = arr[idx];
 
   uint32_t cancel_qty = std::min(node.msg.size, msg.size);
@@ -260,8 +291,12 @@ DirectArrayLOB<TickSize>::modify_order(const databento::MboMsg &msg) {
     cancel_order(cancel_msg);
     add_order(msg);
   } else {
-    auto &arr = get_side_array(node.msg.side);
     size_t idx = price_to_index(node.msg.price);
+    if (__builtin_expect(idx == std::numeric_limits<size_t>::max(), 0)) {
+      return;
+    }
+
+    auto &arr = get_side_array(node.msg.side);
     PriceLevel &level = arr[idx];
 
     if (msg.size > node.msg.size) {
@@ -316,6 +351,7 @@ template <int64_t TickSize> inline void DirectArrayLOB<TickSize>::clear_book() {
   id_map_.clear();
   best_bid_ = databento::kUndefPrice;
   best_ask_ = databento::kUndefPrice;
+  base_price_ = databento::kUndefPrice;
 }
 
 template <int64_t TickSize>
@@ -340,7 +376,8 @@ inline void DirectArrayLOB<TickSize>::recompute_best_bid() {
   for (int i = 1; i < 10000; ++i) {
     int64_t candidate_price = current_best - (i * TickSize);
     size_t idx = price_to_index(candidate_price);
-    if (bids_[idx].total_qty > 0 && bids_[idx].price == candidate_price) {
+    if (idx != std::numeric_limits<size_t>::max() && bids_[idx].total_qty > 0 &&
+        bids_[idx].price == candidate_price) {
       best_bid_ = candidate_price;
       return;
     }
@@ -355,7 +392,8 @@ inline void DirectArrayLOB<TickSize>::recompute_best_ask() {
   for (int i = 1; i < 10000; ++i) {
     int64_t candidate_price = current_best + (i * TickSize);
     size_t idx = price_to_index(candidate_price);
-    if (asks_[idx].total_qty > 0 && asks_[idx].price == candidate_price) {
+    if (idx != std::numeric_limits<size_t>::max() && asks_[idx].total_qty > 0 &&
+        asks_[idx].price == candidate_price) {
       best_ask_ = candidate_price;
       return;
     }
