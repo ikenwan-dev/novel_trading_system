@@ -22,15 +22,15 @@ public:
   void on_update(const EventV2 &event);
 
 private:
-  struct VirtualOrder {
+  struct alignas(64) VirtualOrder {
     uint64_t order_id;
-    databento::Side side;
     int64_t price;
     uint64_t qty_ahead;
     uint64_t remaining_qty;
     uint64_t original_qty;
     int32_t prev_order_idx = -1;
     int32_t next_order_idx = -1;
+    databento::Side side;
   };
 
   struct VirtualPriceLevel {
@@ -53,9 +53,12 @@ private:
   LOB &lob_;
   performance::SimulationProfiler &sim_profiler_;
 
-  common::FlatHashMap<uint64_t, int32_t, 8192> order_idx_map_;
-  common::FlatHashMap<int64_t, int32_t, 2048> buy_level_idx_map_;
-  common::FlatHashMap<int64_t, int32_t, 2048> sell_level_idx_map_;
+  common::FlatHashMap<uint64_t, int32_t, 8192>
+      order_idx_map_; // order_id to order_idx in order_pool_
+  common::FlatHashMap<int64_t, int32_t, 2048>
+      buy_level_idx_map_; // price to level_idx in level_pool_
+  common::FlatHashMap<int64_t, int32_t, 2048>
+      sell_level_idx_map_; // price to level_idx in level_pool_
 
   common::ObjectPool<VirtualOrder, 8192> order_pool_;
   common::ObjectPool<VirtualPriceLevel, 2048> level_pool_;
@@ -69,18 +72,18 @@ private:
 
 // --- Implementation ---
 
+namespace detail {
+  template <class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
+  template <class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
+}
+
 template <LimitOrderBookConcept LOB>
 void VirtualExchange<LOB>::on_update(const EventV2 &event) {
-  if (std::holds_alternative<CreateOrderEvent>(event.payload)) {
-    on_create_order(event.timestamp_ns,
-                    std::get<CreateOrderEvent>(event.payload));
-  } else if (std::holds_alternative<CancelOrderEvent>(event.payload)) {
-    on_cancel_order(event.timestamp_ns,
-                    std::get<CancelOrderEvent>(event.payload));
-  } else {
-    throw std::runtime_error{"Unsupported event type index: " +
-                             std::to_string(event.payload.index())};
-  }
+  std::visit(detail::overloaded{
+      [&](const CreateOrderEvent &e) { on_create_order(event.timestamp_ns, e); },
+      [&](const CancelOrderEvent &e) { on_cancel_order(event.timestamp_ns, e); },
+      [](const auto &) { throw std::runtime_error{"Unsupported event type!"}; }
+  }, event.payload);
 }
 
 template <LimitOrderBookConcept LOB>
@@ -125,6 +128,16 @@ void VirtualExchange<LOB>::on_create_order(uint64_t timestamp_ns,
       int32_t curr_idx = *best_level_idx_ptr;
       int32_t prev_idx = -1;
 
+      // --- ARCHITECTURE DECISION: O(N) Insertion vs O(1) Arrays ---
+      // We explicitly choose a linear O(N) insertion here to maintain an intrusive 
+      // doubly-linked list. While a Direct-Mapped Array + Hierarchical Bitmask would 
+      // yield O(1) insertions, it would force on_fill() to unnecessarily scan across
+      // potentially massive empty price gaps. Since this is the *Virtual* Exchange, 
+      // we assume the user's strategy maintains a small number of active price levels 
+      // (e.g., N < 50) tightly around the BBO. At this scale, the O(N) insertion adds 
+      // only a few nanoseconds, while delivering O(1) jump-to-next-active-level
+      // performance during latency-critical market data sweeps.
+      // 
       // Bids are sorted descending (highest price first)
       // Asks are sorted ascending (lowest price first)
       while (curr_idx != -1) {

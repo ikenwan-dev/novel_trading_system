@@ -6,7 +6,6 @@
 #include "Performance/LatencyProfiler.h"
 #include "Performance/TSC_Clock.h"
 #include "VirtualExchange/VirtualExchange.h"
-#include <concepts>
 #include <cstdint>
 #include <databento/historical.hpp>
 #include <variant>
