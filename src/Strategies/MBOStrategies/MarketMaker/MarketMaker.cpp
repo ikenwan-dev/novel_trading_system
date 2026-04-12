@@ -1,4 +1,6 @@
 #include "MarketMaker.h"
+#include "../MBOStrategyConcept.h"
+#include "../../../LimitOrderBook/DataBentoLOB/DataBentoLOB.h"
 
 namespace backtesting_engine::mbo {
 
@@ -65,4 +67,5 @@ void MarketMaker::impl_on_order_canceled(uint64_t order_id) {
   }
 }
 
+static_assert(StrategyConcept<MarketMaker, DataBentoLOB>, "MarketMaker fails to implement StrategyConcept!");
 } // namespace backtesting_engine::mbo

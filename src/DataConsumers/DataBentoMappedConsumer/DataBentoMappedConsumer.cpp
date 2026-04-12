@@ -1,4 +1,5 @@
 #include "DataConsumers/DataBentoMappedConsumer/DataBentoMappedConsumer.h"
+#include "../MBODataConsumerConcept.h"
 #include <fcntl.h>
 #include <iostream>
 #include <sys/mman.h>
@@ -107,4 +108,5 @@ bool DataBentoMappedConsumer::try_poll(databento::MboMsg &out_msg) {
   }
 }
 
+static_assert(DataConsumerConcept<DataBentoMappedConsumer>, "DataBentoMappedConsumer fails to implement DataConsumerConcept!");
 } // namespace backtesting_engine::mbo

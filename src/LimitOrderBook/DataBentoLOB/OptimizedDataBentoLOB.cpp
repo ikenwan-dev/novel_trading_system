@@ -1,4 +1,5 @@
 #include "OptimizedDataBentoLOB.h"
+#include "../LimitOrderBookConcept.h"
 #include <algorithm>
 
 namespace backtesting_engine::mbo {
@@ -230,4 +231,5 @@ OptimizedDataBentoLOB::PriceLevel* OptimizedDataBentoLOB::find_price_level(std::
   }
 }
 
+static_assert(LimitOrderBookConcept<OptimizedDataBentoLOB>, "OptimizedDataBentoLOB fails to implement LimitOrderBookConcept!");
 } // namespace backtesting_engine::mbo

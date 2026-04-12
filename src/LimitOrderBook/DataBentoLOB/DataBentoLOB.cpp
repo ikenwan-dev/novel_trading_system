@@ -1,4 +1,5 @@
 #include "DataBentoLOB.h"
+#include "../LimitOrderBookConcept.h"
 #include "databento/enums.hpp"
 #include "databento/record.hpp"
 #include <algorithm>
@@ -176,4 +177,5 @@ DataBentoLOB::get_order_message(uint64_t order_id, PriceLevel &level) {
   }
   return level_order_it;
 }
+static_assert(LimitOrderBookConcept<DataBentoLOB>, "DataBentoLOB fails to implement LimitOrderBookConcept!");
 } // namespace backtesting_engine::mbo

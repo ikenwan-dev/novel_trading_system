@@ -1,4 +1,5 @@
 #include "DirectArrayLOB.h"
+#include "../LimitOrderBookConcept.h"
 #include <algorithm>
 
 namespace backtesting_engine::mbo {
@@ -240,4 +241,5 @@ void DirectArrayLOB::recompute_best_ask() {
   }
 }
 
+static_assert(LimitOrderBookConcept<DirectArrayLOB>, "DirectArrayLOB fails to implement LimitOrderBookConcept!");
 } // namespace backtesting_engine::mbo
