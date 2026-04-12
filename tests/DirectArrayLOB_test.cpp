@@ -7,15 +7,15 @@ using namespace backtesting_engine::mbo;
 
 class DirectArrayLOBTest : public ::testing::Test {
 protected:
-  std::unique_ptr<DirectArrayLOB> lob_ptr;
-  DirectArrayLOB &lob;
+  std::unique_ptr<DirectArrayLOB<10000000>> lob_ptr;
+  DirectArrayLOB<10000000> &lob;
 
   // 1-cent tick size scaled for Databento FixedPriceScale (1e9)
   // 0.01 * 1,000,000,000 = 10,000,000
   static constexpr int64_t TICK_SIZE = 10000000;
 
   DirectArrayLOBTest()
-      : lob_ptr(std::make_unique<DirectArrayLOB>(TICK_SIZE)), lob(*lob_ptr) {}
+      : lob_ptr(std::make_unique<DirectArrayLOB<TICK_SIZE>>()), lob(*lob_ptr) {}
 
   // Helper to create a dummy MboMsg
   databento::MboMsg create_msg(uint64_t order_id, int64_t price, uint32_t size,
@@ -154,9 +154,9 @@ TEST_F(DirectArrayLOBTest, TopOfBookLinearDepletion) {
 TEST_F(DirectArrayLOBTest, MaskIndexAccuracy) {
   // Add a very high price that tests the mask truncation and memory bounding
   int64_t base_price = 100 * databento::kFixedPriceScale;
-  int64_t extreme_price = base_price +
-                          (DirectArrayLOB::LOB_CAPACITY * TICK_SIZE) +
-                          (10 * TICK_SIZE);
+  int64_t extreme_price =
+      base_price + (DirectArrayLOB<TICK_SIZE>::LOB_CAPACITY * TICK_SIZE) +
+      (10 * TICK_SIZE);
 
   lob.update_book(create_msg(99, extreme_price, 50, databento::Action::Add,
                              databento::Side::Bid));

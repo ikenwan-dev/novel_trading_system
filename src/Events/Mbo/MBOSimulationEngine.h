@@ -16,7 +16,6 @@
 
 namespace backtesting_engine::mbo {
 
-
 template <DataConsumerConcept Consumer, LimitOrderBookConcept LOB,
           StrategyConcept<LOB> Strategy>
 class MBOSimulationEngine {
