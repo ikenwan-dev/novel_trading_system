@@ -27,7 +27,7 @@ public:
     REJECTED,
     EXPIRED
   };
-  struct OMSOrder {
+  struct alignas(64) OMSOrder {
     uint64_t order_id{0};
     int64_t price{0};
     uint64_t qty{0};

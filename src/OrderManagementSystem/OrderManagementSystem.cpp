@@ -1,5 +1,6 @@
 #include "OrderManagementSystem/OrderManagementSystem.h"
 #include "Events/Mbo/MboEvent.h"
+#include <cassert>
 #include <cstdint>
 #include <iomanip>
 #include <iostream>
@@ -19,7 +20,7 @@ OrderManagementSystem::OrderManagementSystem(NetworkSimulator &simulator,
 std::pair<OrderManagementSystem::OrderID, RiskResult>
 OrderManagementSystem::create_order(uint64_t timestamp_ns, int64_t price,
                                     uint64_t qty, databento::Side side) {
-  if (next_order_id_ == max_orders_) {
+  if (next_order_id_ == max_orders_) [[unlikely]] {
     throw std::runtime_error("OrderManagementSystem is full");
   }
 
@@ -54,18 +55,14 @@ OrderManagementSystem::create_order(uint64_t timestamp_ns, int64_t price,
 
 // to be called by network simulator/ vx
 void OrderManagementSystem::ack_create_order(OrderID order_id) {
-  if (order_id >= next_order_id_) {
-    throw std::runtime_error("Invalid order id");
-  }
+  assert(order_id < next_order_id_ && "Invalid order id");
   orders_[order_id].status = OMSOrderStatus::LIVE;
 }
 
 // to be called by network simulator/ vx
 void OrderManagementSystem::ack_fill_order(OrderID order_id,
                                            uint64_t filled_qty, int64_t price) {
-  if (order_id >= next_order_id_) {
-    throw std::runtime_error("Invalid order id");
-  }
+  assert(order_id < next_order_id_ && "Invalid order id");
 
   OMSOrder &order = orders_[order_id];
   if (order.status != OMSOrderStatus::LIVE &&
@@ -99,9 +96,7 @@ void OrderManagementSystem::ack_fill_order(OrderID order_id,
 
 void OrderManagementSystem::cancel_order(uint64_t timestamp_ns,
                                          OrderID order_id) {
-  if (order_id >= next_order_id_) {
-    throw std::runtime_error("Invalid order id");
-  }
+  assert(order_id < next_order_id_ && "Invalid order id");
   OMSOrder &order = orders_[order_id];
   if (order.status == OMSOrderStatus::FILLED ||
       order.status == OMSOrderStatus::PENDING_CANCEL ||
@@ -116,9 +111,7 @@ void OrderManagementSystem::cancel_order(uint64_t timestamp_ns,
 }
 
 void OrderManagementSystem::ack_cancel_order(OrderID order_id) {
-  if (order_id >= next_order_id_) {
-    throw std::runtime_error("Invalid order id");
-  }
+  assert(order_id < next_order_id_ && "Invalid order id");
   if (orders_[order_id].status != OMSOrderStatus::FILLED) {
     orders_[order_id].status = OMSOrderStatus::CANCELLED;
   }
@@ -126,9 +119,7 @@ void OrderManagementSystem::ack_cancel_order(OrderID order_id) {
 
 const OrderManagementSystem::OMSOrder &
 OrderManagementSystem::get_order(OrderID order_id) const {
-  if (order_id >= next_order_id_) {
-    throw std::runtime_error("Invalid order id");
-  }
+  assert(order_id < next_order_id_ && "Invalid order id");
   return orders_[order_id];
 }
 
