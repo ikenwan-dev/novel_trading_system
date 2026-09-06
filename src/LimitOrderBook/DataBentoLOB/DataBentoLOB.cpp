@@ -18,9 +18,10 @@ void DataBentoLOB::update_book(const databento::MboMsg &msg) {
              msg.action == databento::Action::Fill) {
     // do nothing
   } else {
-    // throw std::runtime_error{std::string{"Unknown action"} +
-    //                          databento::ToString(msg.action)};
-    std::cout << "Unknown action: " << databento::ToString(msg.action) << "\n";
+    throw std::runtime_error{std::string{"Unknown action"} +
+                             databento::ToString(msg.action)};
+    // std::cout << "Unknown action: " << databento::ToString(msg.action) <<
+    // "\n";
   }
 }
 
@@ -177,5 +178,6 @@ DataBentoLOB::get_order_message(uint64_t order_id, PriceLevel &level) {
   }
   return level_order_it;
 }
-static_assert(LimitOrderBookConcept<DataBentoLOB>, "DataBentoLOB fails to implement LimitOrderBookConcept!");
+static_assert(LimitOrderBookConcept<DataBentoLOB>,
+              "DataBentoLOB fails to implement LimitOrderBookConcept!");
 } // namespace backtesting_engine::mbo
