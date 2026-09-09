@@ -13,11 +13,12 @@
 namespace backtesting_engine::mbo {
 
 /**
- * @brief Zero-Allocation, O(1) Limit Order Book using a Bitwise Circular Array.
+ * @brief Zero-Allocation, O(1) Limit Order Book using an Anchored Direct Array.
  *
- * Employs a power-of-2 array mapped via (price / TickSize) & (CAPACITY - 1)
- * to guarantee strict O(1) lookups, insertions, and memory bounds safety
- * without branching or hardware modulo.
+ * Direct-indexes price levels relative to an anchored base price centered at
+ * (LOB_CAPACITY / 2), computing indices via (price - base_price_) / TickSize.
+ * Enforces strict bounds checking and collision detection to prevent book
+ * corruption while preserving O(1) insertions, cancellations, and lookups.
  */
 template <int64_t TickSize> class DirectArrayLOB {
 public:
